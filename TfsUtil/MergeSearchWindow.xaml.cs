@@ -215,13 +215,46 @@ namespace TfsUtil
             FillCurrentUserName();
         }
 
+        private void SetMergeCandidatesListViewBackText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                this.MergeCandidatesListView.Background = null;
+                return;
+            }
+
+            this.MergeCandidatesListView.Background = new VisualBrush(
+                new TextBlock()
+                {
+                    Text = text,
+                    ToolTip = text,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextAlignment = TextAlignment.Center,
+                    Margin = new Thickness(12d),
+                    TextWrapping = TextWrapping.Wrap,
+                    Width = this.MergeCandidatesListView.ActualWidth,
+                    Height = this.MergeCandidatesListView.ActualHeight
+                })
+            {
+                AlignmentX = AlignmentX.Center,
+                AlignmentY = AlignmentY.Center,
+                Stretch = Stretch.None,
+                TileMode = TileMode.None,
+                AutoLayoutContent = false
+            };
+        }
+
         private void SearchMergeCandidates()
         {
+            this.MergeCandidatesListView.ItemsSource = null;
             this.MergeCandidatesListView.Items.Clear();
+            SetMergeCandidatesListViewBackText(null);
 
             var sourceBranch = m_model.SourceBranch;
             if (string.IsNullOrWhiteSpace(sourceBranch))
             {
+                SetMergeCandidatesListViewBackText("The source branch is not selected properly.");
                 return;
             }
 
@@ -230,6 +263,7 @@ namespace TfsUtil
                 || targetBranchItem.Item == null
                 || string.IsNullOrEmpty(targetBranchItem.Item.Item))
             {
+                SetMergeCandidatesListViewBackText("The target branch is not selected properly.");
                 return;
             }
 
@@ -252,12 +286,12 @@ namespace TfsUtil
 
             if (pr.Cancelled)
             {
-                this.MergeCandidatesListView.Items.Add("The operation is cancelled.");
+                SetMergeCandidatesListViewBackText("The operation is cancelled.");
                 return;
             }
             if (pr.Exception != null)
             {
-                this.MergeCandidatesListView.Items.Add(
+                SetMergeCandidatesListViewBackText(
                     string.Format(
                         "Error occurred: [{0}] {1}",
                         pr.Exception.GetType().FullName,
@@ -266,7 +300,7 @@ namespace TfsUtil
             }
 
             var mergeCandidates = (MergeCandidate[])pr.Result;
-            var filteredCandidates = mergeCandidates;
+            IEnumerable<MergeCandidate> filteredCandidates = mergeCandidates;
 
             if (!string.IsNullOrEmpty(userName))
             {
@@ -277,13 +311,18 @@ namespace TfsUtil
 
             if (!filteredCandidates.Any())
             {
-                this.MergeCandidatesListView.Items.Add("Nothing is found.");
+                SetMergeCandidatesListViewBackText("Nothing is found matching the criteria.");
                 return;
             }
 
+            filteredCandidates = filteredCandidates
+                .OrderBy(item => item.Changeset.CreationDate)
+                .ThenBy(item => item.Changeset.ChangesetId);
+
             foreach (var candidate in filteredCandidates)
             {
-                this.MergeCandidatesListView.Items.Add(candidate.ToString());
+                var item = ControlItem.Create(candidate, candidate.ToString());
+                this.MergeCandidatesListView.Items.Add(item);
             }
         }
 
@@ -312,6 +351,24 @@ namespace TfsUtil
         private void SourceBranchComboBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             m_model.RefreshTargetBranches();
+        }
+
+        private void MergeCandidatesListView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var vb = this.MergeCandidatesListView.Background as VisualBrush;
+            if (vb == null)
+            {
+                return;
+            }
+
+            var fe = vb.Visual as FrameworkElement;
+            if (fe == null)
+            {
+                return;
+            }
+
+            fe.Width = this.MergeCandidatesListView.ActualWidth;
+            fe.Height = this.MergeCandidatesListView.ActualHeight;
         }
 
         #endregion
