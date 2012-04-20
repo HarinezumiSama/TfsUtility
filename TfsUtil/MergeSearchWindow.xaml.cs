@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -25,12 +26,20 @@ namespace TfsUtil
 
         #region MergeSearchWindowModel Class
 
-        private sealed class MergeSearchWindowModel
+        private sealed class MergeSearchWindowModel : INotifyPropertyChanged
         {
+            #region Fields
+
+            private string m_sourceBranch;
+
+            #endregion
+
             #region Constructors
 
             public MergeSearchWindowModel()
             {
+                m_sourceBranch = string.Empty;
+
                 this.SourceBranches = new List<ControlItem<ItemIdentifier>>();
                 this.SourceBranchesView = CollectionViewSource.GetDefaultView(this.SourceBranches);
                 this.SourceBranchesView.CurrentChanged += this.SourceBranchesView_CurrentChanged;
@@ -42,6 +51,22 @@ namespace TfsUtil
             #endregion
 
             #region Private Methods
+
+            private void RaisePropertyChanged(string propertyName)
+            {
+                if (string.IsNullOrEmpty(propertyName))
+                {
+                    return;
+                }
+
+                var propertyChanged = this.PropertyChanged;
+                if (propertyChanged == null)
+                {
+                    return;
+                }
+
+                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
 
             private void SourceBranchesView_CurrentChanged(object sender, EventArgs e)
             {
@@ -88,18 +113,35 @@ namespace TfsUtil
 
             public string SourceBranch
             {
-                get;
-                set;
+                [DebuggerStepThrough]
+                get
+                {
+                    return m_sourceBranch;
+                }
+                set
+                {
+                    var actualValue = value ?? string.Empty;
+                    if (m_sourceBranch != actualValue)
+                    {
+                        m_sourceBranch = actualValue;
+                        RaisePropertyChanged(Helper.GetPropertyName((MergeSearchWindowModel obj) => obj.SourceBranch));
+                    }
+                }
             }
 
             #endregion
 
             #region Public Methods
 
+            public TfsWrapper CreateTfsWrapper()
+            {
+                return new TfsWrapper(this.TfsServerUri);
+            }
+
             public void RefreshSourceBranches()
             {
                 BranchObject[] branchObjects;
-                using (var tfsWrapper = new TfsWrapper(this.TfsServerUri))
+                using (var tfsWrapper = CreateTfsWrapper())
                 {
                     branchObjects = tfsWrapper.VersionControlServer.QueryRootBranchObjects(RecursionType.Full);
                 }
@@ -133,7 +175,7 @@ namespace TfsUtil
                 var mergeRelationships = Enumerable.Empty<ItemIdentifier>();
                 if (!string.IsNullOrWhiteSpace(sourceBranch))
                 {
-                    using (var tfsWrapper = new TfsWrapper(this.TfsServerUri))
+                    using (var tfsWrapper = CreateTfsWrapper())
                     {
                         var vcs = tfsWrapper.VersionControlServer;
                         if (vcs.ServerItemExistsSafe(sourceBranch, ItemType.Any))
@@ -152,6 +194,12 @@ namespace TfsUtil
                 this.TargetBranchesView.Refresh();
                 this.TargetBranchesView.MoveCurrentToFirst();
             }
+
+            #endregion
+
+            #region INotifyPropertyChanged Members
+
+            public event PropertyChangedEventHandler PropertyChanged;
 
             #endregion
         }
@@ -245,6 +293,68 @@ namespace TfsUtil
             };
         }
 
+        private void UpdateSourceBranchPopupState()
+        {
+            this.SourceBranchPopup.Width = this.SourceBranchComboBox.ActualWidth;
+
+            this.SourceBranchPopup.IsOpen = this.SourceBranchComboBox.IsKeyboardFocusWithin
+                && !this.SourceBranchComboBox.IsDropDownOpen
+                && this.SourceBranchPopupListBox.HasItems;
+        }
+
+        private void CloseSourceBranchPopup()
+        {
+            this.SourceBranchPopup.IsOpen = false;
+        }
+
+        private void UpdateSourceBranchPopupList()
+        {
+            this.SourceBranchPopupListBox.Items.Clear();
+
+            var sourceBranchText = m_model.SourceBranch;
+            if (string.IsNullOrWhiteSpace(sourceBranchText))
+            {
+                return;
+            }
+
+            IEnumerable<string> suggestions;
+            using (var tfsWrapper = m_model.CreateTfsWrapper())
+            {
+                suggestions = tfsWrapper.GetSuggestions(sourceBranchText);
+            }
+
+            foreach (var suggestion in suggestions)
+            {
+                var lbi = new ListBoxItem()
+                {
+                    Content = suggestion,
+                    Tag = suggestion,
+                    ToolTip = suggestion
+                };
+                lbi.PreviewMouseLeftButtonDown += this.SourceBranchPopupListBox_PreviewMouseLeftButtonDown;
+                this.SourceBranchPopupListBox.Items.Add(lbi);
+            }
+        }
+
+        private bool SelectPopupItem(ComboBox comboBox, ListBoxItem lbi)
+        {
+            if (lbi == null)
+            {
+                return false;
+            }
+
+            var path = lbi.Tag as string;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            comboBox.Text = path;
+            comboBox.MoveCaretToEnd();
+
+            return true;
+        }
+
         private void SearchMergeCandidates()
         {
             this.MergeCandidatesListView.ItemsSource = null;
@@ -276,7 +386,7 @@ namespace TfsUtil
                 "Searching for changesets to merge...",
                 pw =>
                 {
-                    using (var tfsWrapper = new TfsWrapper(m_model.TfsServerUri))
+                    using (var tfsWrapper = m_model.CreateTfsWrapper())
                     {
                         return tfsWrapper
                             .VersionControlServer
@@ -300,7 +410,7 @@ namespace TfsUtil
             }
 
             var mergeCandidates = (MergeCandidate[])pr.Result;
-            IEnumerable<MergeCandidate> filteredCandidates = mergeCandidates;
+            var filteredCandidates = (IEnumerable<MergeCandidate>)mergeCandidates;
 
             if (!string.IsNullOrEmpty(userName))
             {
@@ -350,6 +460,9 @@ namespace TfsUtil
 
         private void SourceBranchComboBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            UpdateSourceBranchPopupList();
+            UpdateSourceBranchPopupState();
+
             m_model.RefreshTargetBranches();
         }
 
@@ -369,6 +482,71 @@ namespace TfsUtil
 
             fe.Width = this.MergeCandidatesListView.ActualWidth;
             fe.Height = this.MergeCandidatesListView.ActualHeight;
+        }
+
+        private void SourceBranchComboBox_DropDownOpened(object sender, EventArgs e)
+        {
+            UpdateSourceBranchPopupState();
+        }
+
+        private void SourceBranchComboBox_DropDownClosed(object sender, EventArgs e)
+        {
+            UpdateSourceBranchPopupState();
+        }
+
+        private void SourceBranchComboBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateSourceBranchPopupState();
+        }
+
+        private void SourceBranchComboBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            UpdateSourceBranchPopupState();
+        }
+
+        private void SourceBranchPopupListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = SelectPopupItem(this.SourceBranchComboBox, e.Source as ListBoxItem);
+        }
+
+        private void StackPanel_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                CloseSourceBranchPopup();
+                return;
+            }
+
+            if (this.SourceBranchPopup.IsOpen)
+            {
+                if (e.Key == Key.Enter)
+                {
+                    e.Handled = SelectPopupItem(
+                        this.SourceBranchComboBox,
+                        this.SourceBranchPopupListBox.SelectedItem as ListBoxItem);
+                    return;
+                }
+
+                int? newSelectedIndex = null;
+                if (e.Key == Key.Up)
+                {
+                    e.Handled = true;
+                    newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex - 1;
+                }
+                else if (e.Key == Key.Down)
+                {
+                    e.Handled = true;
+                    newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex + 1;
+                }
+
+                if (newSelectedIndex.HasValue
+                    && newSelectedIndex.Value >= 0
+                    && newSelectedIndex.Value < this.SourceBranchPopupListBox.Items.Count)
+                {
+                    this.SourceBranchPopupListBox.SelectedIndex = newSelectedIndex.Value;
+                }
+            }
         }
 
         #endregion
