@@ -1,9 +1,17 @@
 ﻿<Window x:Class="TfsUtil.MergeSearchWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Merge Search" Height="480" Width="640" Loaded="Window_Loaded" FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}" WindowStartupLocation="CenterOwner">
+        Title="Merge Search"
+        Height="480"
+        Width="640"
+        Loaded="Window_Loaded"
+        FontFamily="{StaticResource DefaultFontFamily}"
+        FontSize="{StaticResource DefaultFontSize}"
+        WindowStartupLocation="CenterOwner"
+        FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}"
+        Deactivated="Window_Deactivated">
     <Grid>
-        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0" PreviewKeyDown="StackPanel_PreviewKeyDown">
+        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0" PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
             <Label Content="_Source Branch:" HorizontalAlignment="Left" Margin="0,0,0,0" Name="SourceBranchLabel" VerticalAlignment="Top" />
             <ComboBox Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,0,0,0" Name="SourceBranchComboBox" ItemsSource="{Binding SourceBranchesView}" IsSynchronizedWithCurrentItem="True" IsEditable="True" TextBoxBase.TextChanged="SourceBranchComboBox_TextChanged" Text="{Binding SourceBranch, Mode=TwoWay}" DropDownOpened="SourceBranchComboBox_DropDownOpened" DropDownClosed="SourceBranchComboBox_DropDownClosed" GotFocus="SourceBranchComboBox_GotFocus" LostFocus="SourceBranchComboBox_LostFocus" IsTextSearchEnabled="False" />
         </StackPanel>

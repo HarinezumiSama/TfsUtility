@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -391,12 +392,24 @@ namespace TfsUtil
             #endregion
 
             var inputManager = InputManager.Current;
+            if (inputManager == null)
+            {
+                return;
+            }
 
-            var args = new KeyEventArgs(
-                inputManager.PrimaryKeyboardDevice,
-                inputManager.PrimaryKeyboardDevice.ActiveSource,
-                0,
-                Key.End)
+            var keyboardDevice = inputManager.PrimaryKeyboardDevice;
+            if (keyboardDevice == null)
+            {
+                return;
+            }
+
+            var source = keyboardDevice.ActiveSource;
+            if (source == null)
+            {
+                return;
+            }
+
+            var args = new KeyEventArgs(keyboardDevice, source, 0, Key.End)
             {
                 RoutedEvent = Keyboard.KeyDownEvent
             };

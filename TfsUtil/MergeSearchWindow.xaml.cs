@@ -297,7 +297,8 @@ namespace TfsUtil
         {
             this.SourceBranchPopup.Width = this.SourceBranchComboBox.ActualWidth;
 
-            this.SourceBranchPopup.IsOpen = this.SourceBranchComboBox.IsKeyboardFocusWithin
+            this.SourceBranchPopup.IsOpen = this.IsActive
+                && this.SourceBranchComboBox.IsKeyboardFocusWithin
                 && !this.SourceBranchComboBox.IsDropDownOpen
                 && this.SourceBranchPopupListBox.HasItems;
         }
@@ -509,7 +510,7 @@ namespace TfsUtil
             e.Handled = SelectPopupItem(this.SourceBranchComboBox, e.Source as ListBoxItem);
         }
 
-        private void StackPanel_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void SourceBranchStackPanel_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
             {
@@ -529,24 +530,41 @@ namespace TfsUtil
                 }
 
                 int? newSelectedIndex = null;
-                if (e.Key == Key.Up)
+                if (this.SourceBranchPopupListBox.Items.Count > 0)
                 {
-                    e.Handled = true;
-                    newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex - 1;
-                }
-                else if (e.Key == Key.Down)
-                {
-                    e.Handled = true;
-                    newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex + 1;
+                    if (e.Key == Key.Up)
+                    {
+                        e.Handled = true;
+                        newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex - 1;
+                        if (newSelectedIndex < -1)
+                        {
+                            newSelectedIndex = this.SourceBranchPopupListBox.Items.Count - 1;
+                        }
+                    }
+                    else if (e.Key == Key.Down)
+                    {
+                        e.Handled = true;
+                        newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex + 1;
+                        if (newSelectedIndex >= this.SourceBranchPopupListBox.Items.Count)
+                        {
+                            newSelectedIndex = -1;
+                        }
+                    }
                 }
 
                 if (newSelectedIndex.HasValue
-                    && newSelectedIndex.Value >= 0
+                    && newSelectedIndex.Value >= -1
                     && newSelectedIndex.Value < this.SourceBranchPopupListBox.Items.Count)
                 {
                     this.SourceBranchPopupListBox.SelectedIndex = newSelectedIndex.Value;
+                    this.SourceBranchPopupListBox.ScrollIntoView(this.SourceBranchPopupListBox.SelectedItem);
                 }
             }
+        }
+
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            UpdateSourceBranchPopupState();
         }
 
         #endregion
