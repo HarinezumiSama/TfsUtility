@@ -27,14 +27,23 @@
         <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,172,41,0" Name="UserNameTextBox" VerticalAlignment="Top" />
         <Button Content="*" Height="23" HorizontalAlignment="Right" Margin="0,172,12,0" Name="FillCurrentUserNameButton" VerticalAlignment="Top" Width="23" Click="FillCurrentUserNameButton_Click" />
         <Button Content="_Search" Height="23" HorizontalAlignment="Left" Margin="12,201,0,0" Name="SearchButton" VerticalAlignment="Top" Width="75" Click="SearchButton_Click" />
-        <ListView Name="MergeCandidatesListView" Margin="12,267,12,12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SizeChanged="MergeCandidatesListView_SizeChanged">
+        <ListView Name="MergeCandidatesListView" Margin="12,267,12,12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SizeChanged="MergeCandidatesListView_SizeChanged"
+                ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening">
+            <ListView.ContextMenu>
+                <ContextMenu FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}">
+                    <MenuItem Name="CopyChangesetNumberMenuItem"  Header="Copy Change_set #" Click="CopyChangesetNumberMenuItem_Click" />
+                    <MenuItem Name="CopyCommentMenuItem" Header="Copy Co_mment" Click="CopyCommentMenuItem_Click" />
+                    <MenuItem Name="CopyWorkItemIdsMenuItem"  Header="Copy _WorkItem IDs" Click="CopyWorkItemIdsMenuItem_Click" />
+                </ContextMenu>
+            </ListView.ContextMenu>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Item.Changeset.CreationDate}" />
-                    <GridViewColumn Header="Changeset" DisplayMemberBinding="{Binding Item.Changeset.ChangesetId}" />
-                    <GridViewColumn Header="Owner" DisplayMemberBinding="{Binding Item.Changeset.Owner}" />
-                    <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Item.Changeset.Comment}" />
-                    <!--<GridViewColumn Header="Info" DisplayMemberBinding="{Binding Item}" />-->
+                    <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Item.CreationDate}" />
+                    <GridViewColumn Header="Changeset" DisplayMemberBinding="{Binding Item.ChangesetId}" />
+                    <GridViewColumn Header="Owner" DisplayMemberBinding="{Binding Item.Owner}" />
+                    <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Item.Comment}" />
+                    <GridViewColumn Header="WorkItem IDs" DisplayMemberBinding="{Binding Item.WorkItemIdsAsString}" />
+                    <!--<GridViewColumn Header="Info" DisplayMemberBinding="{Binding Item.AsString}" />-->
                 </GridView>
             </ListView.View>
         </ListView>

@@ -23,6 +23,8 @@ using TfsUtil.Properties;
 
 namespace TfsUtil
 {
+    // TODO: [VM] Implement MDI-like (New Merge Search menu item creates a new `MDI` window)
+
     /// <summary>
     ///     Contains interaction logic for MainWindow.xaml.
     /// </summary>

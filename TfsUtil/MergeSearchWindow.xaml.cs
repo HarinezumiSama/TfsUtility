@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -391,7 +392,9 @@ namespace TfsUtil
                     {
                         return tfsWrapper
                             .VersionControlServer
-                            .GetMergeCandidates(sourceBranch, targetBranch, RecursionType.Full);
+                            .GetMergeCandidates(sourceBranch, targetBranch, RecursionType.Full)
+                            .Select(item => new MergeCandidateWrapper(item))
+                            .ToArray();
                     }
                 });
 
@@ -410,13 +413,13 @@ namespace TfsUtil
                 return;
             }
 
-            var mergeCandidates = (MergeCandidate[])pr.Result;
-            var filteredCandidates = (IEnumerable<MergeCandidate>)mergeCandidates;
+            var mergeCandidates = (MergeCandidateWrapper[])pr.Result;
+            var filteredCandidates = (IEnumerable<MergeCandidateWrapper>)mergeCandidates;
 
             if (!string.IsNullOrEmpty(userName))
             {
                 filteredCandidates = filteredCandidates
-                    .Where(item => string.Equals(item.Changeset.Owner, userName, StringComparison.OrdinalIgnoreCase))
+                    .Where(item => string.Equals(item.Owner, userName, StringComparison.OrdinalIgnoreCase))
                     .ToArray();
             }
 
@@ -427,14 +430,45 @@ namespace TfsUtil
             }
 
             filteredCandidates = filteredCandidates
-                .OrderBy(item => item.Changeset.CreationDate)
-                .ThenBy(item => item.Changeset.ChangesetId);
+                .OrderBy(item => item.CreationDate)
+                .ThenBy(item => item.ChangesetId);
 
             foreach (var candidate in filteredCandidates)
             {
                 var item = ControlItem.Create(candidate, candidate.ToString());
                 this.MergeCandidatesListView.Items.Add(item);
             }
+        }
+
+        private MergeCandidateWrapper GetSoleSelectedMergeCandidate()
+        {
+            if (this.MergeCandidatesListView.SelectedItems.Count != 1)
+            {
+                return null;
+            }
+
+            return ((ControlItem<MergeCandidateWrapper>)this.MergeCandidatesListView.SelectedItems[0]).Item;
+        }
+
+        private void CopySoleSelectedMergeCandidateDataToClipboard(Func<MergeCandidateWrapper, string> selector)
+        {
+            #region Argument Check
+
+            if (selector == null)
+            {
+                throw new ArgumentNullException("selector");
+            }
+
+            #endregion
+
+            var mergeCandidate = GetSoleSelectedMergeCandidate();
+            if (mergeCandidate == null)
+            {
+                return;
+            }
+
+            var data = selector(mergeCandidate);
+            Clipboard.SetText(data);
         }
 
         #endregion
@@ -529,6 +563,8 @@ namespace TfsUtil
                     return;
                 }
 
+                const int noItemSelectedIndex = -1;
+
                 int? newSelectedIndex = null;
                 if (this.SourceBranchPopupListBox.Items.Count > 0)
                 {
@@ -536,7 +572,7 @@ namespace TfsUtil
                     {
                         e.Handled = true;
                         newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex - 1;
-                        if (newSelectedIndex < -1)
+                        if (newSelectedIndex < noItemSelectedIndex)
                         {
                             newSelectedIndex = this.SourceBranchPopupListBox.Items.Count - 1;
                         }
@@ -547,13 +583,13 @@ namespace TfsUtil
                         newSelectedIndex = this.SourceBranchPopupListBox.SelectedIndex + 1;
                         if (newSelectedIndex >= this.SourceBranchPopupListBox.Items.Count)
                         {
-                            newSelectedIndex = -1;
+                            newSelectedIndex = noItemSelectedIndex;
                         }
                     }
                 }
 
                 if (newSelectedIndex.HasValue
-                    && newSelectedIndex.Value >= -1
+                    && newSelectedIndex.Value >= noItemSelectedIndex
                     && newSelectedIndex.Value < this.SourceBranchPopupListBox.Items.Count)
                 {
                     this.SourceBranchPopupListBox.SelectedIndex = newSelectedIndex.Value;
@@ -565,6 +601,43 @@ namespace TfsUtil
         private void Window_Deactivated(object sender, EventArgs e)
         {
             UpdateSourceBranchPopupState();
+        }
+
+        private void MergeCandidatesListView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            var contextMenu = this.MergeCandidatesListView.ContextMenu;
+            if (contextMenu == null)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            var isSoleItemSelected = this.MergeCandidatesListView.SelectedItems.Count == 1;
+
+            this.CopyChangesetNumberMenuItem.IsEnabled = isSoleItemSelected;
+            this.CopyCommentMenuItem.IsEnabled = isSoleItemSelected;
+
+            if (!contextMenu.Items.OfType<MenuItem>().Any(item => item.IsEnabled))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void CopyChangesetNumberMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            CopySoleSelectedMergeCandidateDataToClipboard(
+                mc => mc.ChangesetId.ToString("D", CultureInfo.InvariantCulture));
+        }
+
+        private void CopyCommentMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            CopySoleSelectedMergeCandidateDataToClipboard(mc => mc.Comment);
+        }
+
+        private void CopyWorkItemIdsMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            CopySoleSelectedMergeCandidateDataToClipboard(mc => mc.WorkItemIdsAsString);
         }
 
         #endregion
