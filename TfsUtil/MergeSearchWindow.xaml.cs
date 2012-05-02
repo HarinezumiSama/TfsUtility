@@ -258,10 +258,14 @@ namespace TfsUtil
             this.UserNameTextBox.Text = identity == null ? string.Empty : identity.Name;
         }
 
+        private void ClearUserName()
+        {
+            this.UserNameTextBox.Clear();
+        }
+
         private void Initialize()
         {
             m_model.RefreshSourceBranches();
-            FillCurrentUserName();
         }
 
         private void SetMergeCandidatesListViewBackText(string text)
@@ -277,13 +281,11 @@ namespace TfsUtil
                 {
                     Text = text,
                     ToolTip = text,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch,
                     TextAlignment = TextAlignment.Center,
                     Margin = new Thickness(12d),
-                    TextWrapping = TextWrapping.Wrap,
-                    Width = this.MergeCandidatesListView.ActualWidth,
-                    Height = this.MergeCandidatesListView.ActualHeight
+                    TextWrapping = TextWrapping.Wrap
                 })
             {
                 AlignmentX = AlignmentX.Center,
@@ -361,6 +363,7 @@ namespace TfsUtil
         {
             this.MergeCandidatesListView.ItemsSource = null;
             this.MergeCandidatesListView.Items.Clear();
+            this.MergeDirectionTextBox.Clear();
             SetMergeCandidatesListViewBackText(null);
 
             var sourceBranch = m_model.SourceBranch;
@@ -381,6 +384,14 @@ namespace TfsUtil
 
             var targetBranch = targetBranchItem.Item.Item;
             var userName = (this.UserNameTextBox.Text ?? string.Empty).Trim();
+
+            var mergeDirection = new StringBuilder();
+            mergeDirection.AppendFormat("'{0}' ⇒ '{1}'", sourceBranch, targetBranch);
+            if (!string.IsNullOrEmpty(userName))
+            {
+                mergeDirection.AppendFormat(" by '{0}'", userName);
+            }
+            this.MergeDirectionTextBox.Text = mergeDirection.ToString();
 
             var pr = ProgressWindow.Execute(
                 this,
@@ -493,30 +504,17 @@ namespace TfsUtil
             FillCurrentUserName();
         }
 
+        private void ClearUserNameButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClearUserName();
+        }
+
         private void SourceBranchComboBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateSourceBranchPopupList();
             UpdateSourceBranchPopupState();
 
             m_model.RefreshTargetBranches();
-        }
-
-        private void MergeCandidatesListView_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            var vb = this.MergeCandidatesListView.Background as VisualBrush;
-            if (vb == null)
-            {
-                return;
-            }
-
-            var fe = vb.Visual as FrameworkElement;
-            if (fe == null)
-            {
-                return;
-            }
-
-            fe.Width = this.MergeCandidatesListView.ActualWidth;
-            fe.Height = this.MergeCandidatesListView.ActualHeight;
         }
 
         private void SourceBranchComboBox_DropDownOpened(object sender, EventArgs e)
@@ -614,14 +612,13 @@ namespace TfsUtil
 
             var isSoleItemSelected = this.MergeCandidatesListView.SelectedItems.Count == 1;
 
+            var mergeCandidate = new Lazy<MergeCandidateWrapper>(() => GetSoleSelectedMergeCandidate());
+
             this.CopyChangesetNumberMenuItem.IsEnabled = isSoleItemSelected;
             this.CopyCommentMenuItem.IsEnabled = isSoleItemSelected;
-
-            if (!contextMenu.Items.OfType<MenuItem>().Any(item => item.IsEnabled))
-            {
-                e.Handled = true;
-                return;
-            }
+            this.CopyWorkItemIdsMenuItem.IsEnabled = isSoleItemSelected
+                && mergeCandidate.Value != null
+                && !string.IsNullOrEmpty(mergeCandidate.Value.WorkItemIdsAsString);
         }
 
         private void CopyChangesetNumberMenuItem_Click(object sender, RoutedEventArgs e)

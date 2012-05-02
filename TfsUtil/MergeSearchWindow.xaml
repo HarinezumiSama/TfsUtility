@@ -1,39 +1,60 @@
-﻿<Window x:Class="TfsUtil.MergeSearchWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Merge Search"
-        Height="480"
-        Width="640"
-        Loaded="Window_Loaded"
-        FontFamily="{StaticResource DefaultFontFamily}"
-        FontSize="{StaticResource DefaultFontSize}"
-        WindowStartupLocation="CenterOwner"
-        FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}"
-        Deactivated="Window_Deactivated">
+﻿<Window x:Class="TfsUtil.MergeSearchWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Merge Search" Height="480" Width="640"
+        Loaded="Window_Loaded" FontFamily="{StaticResource DefaultFontFamily}"
+        FontSize="{StaticResource DefaultFontSize}" WindowStartupLocation="CenterOwner"
+        FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}" Deactivated="Window_Deactivated"
+        MinWidth="400" MinHeight="400" ShowInTaskbar="False">
     <Grid>
-        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0" PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
-            <Label Content="_Source Branch:" HorizontalAlignment="Left" Margin="0,0,0,0" Name="SourceBranchLabel" VerticalAlignment="Top" />
-            <ComboBox Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,0,0,0" Name="SourceBranchComboBox" ItemsSource="{Binding SourceBranchesView}" IsSynchronizedWithCurrentItem="True" IsEditable="True" TextBoxBase.TextChanged="SourceBranchComboBox_TextChanged" Text="{Binding SourceBranch, Mode=TwoWay}" DropDownOpened="SourceBranchComboBox_DropDownOpened" DropDownClosed="SourceBranchComboBox_DropDownClosed" GotFocus="SourceBranchComboBox_GotFocus" LostFocus="SourceBranchComboBox_LostFocus" IsTextSearchEnabled="False" />
+        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0"
+                PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
+            <Label Content="_Source Branch:" HorizontalAlignment="Left" Margin="0,0,0,0" Name="SourceBranchLabel"
+                    VerticalAlignment="Top" />
+            <ComboBox Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,0,0,0"
+                    Name="SourceBranchComboBox" ItemsSource="{Binding SourceBranchesView}"
+                    IsSynchronizedWithCurrentItem="True" IsEditable="True"
+                    TextBoxBase.TextChanged="SourceBranchComboBox_TextChanged"
+                    Text="{Binding SourceBranch, Mode=TwoWay}" DropDownOpened="SourceBranchComboBox_DropDownOpened"
+                    DropDownClosed="SourceBranchComboBox_DropDownClosed" GotFocus="SourceBranchComboBox_GotFocus"
+                    LostFocus="SourceBranchComboBox_LostFocus" IsTextSearchEnabled="False" />
         </StackPanel>
-        <Popup Name="SourceBranchPopup" IsOpen="false" StaysOpen="True" PlacementTarget="{Binding ElementName=SourceBranchComboBox}" Placement="Bottom" MaxHeight="200">
+        <Popup Name="SourceBranchPopup" IsOpen="false" StaysOpen="True"
+                PlacementTarget="{Binding ElementName=SourceBranchComboBox}" Placement="Bottom" MaxHeight="200">
             <Border BorderThickness="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                <ListBox Name="SourceBranchPopupListBox" Focusable="False" KeyboardNavigation.IsTabStop="False" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single">
+                <ListBox Name="SourceBranchPopupListBox" Focusable="False" KeyboardNavigation.IsTabStop="False"
+                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single">
                 </ListBox>
             </Border>
         </Popup>
-        <Label Content="_Target Branch:" HorizontalAlignment="Left" Margin="12,74,12,0" Name="TargetBranchLabel" VerticalAlignment="Top" />
-        <ComboBox Height="23" HorizontalAlignment="Stretch" Margin="12,106,12,0" Name="TargetBranchComboBox" VerticalAlignment="Top" ItemsSource="{Binding TargetBranchesView}" IsSynchronizedWithCurrentItem="True" />
-        <Label Content="_User Name:" HorizontalAlignment="Left" Margin="12,143,12,0" Name="UserNameLabel" VerticalAlignment="Top" />
-        <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,172,41,0" Name="UserNameTextBox" VerticalAlignment="Top" />
-        <Button Content="*" Height="23" HorizontalAlignment="Right" Margin="0,172,12,0" Name="FillCurrentUserNameButton" VerticalAlignment="Top" Width="23" Click="FillCurrentUserNameButton_Click" />
-        <Button Content="_Search" Height="23" HorizontalAlignment="Left" Margin="12,201,0,0" Name="SearchButton" VerticalAlignment="Top" Width="75" Click="SearchButton_Click" />
-        <ListView Name="MergeCandidatesListView" Margin="12,267,12,12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SizeChanged="MergeCandidatesListView_SizeChanged"
-                ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening">
+        <Label Content="_Target Branch:" HorizontalAlignment="Left" Margin="12,74,12,0" Name="TargetBranchLabel"
+                VerticalAlignment="Top" />
+        <ComboBox Height="23" HorizontalAlignment="Stretch" Margin="12,106,12,0" Name="TargetBranchComboBox"
+                VerticalAlignment="Top" ItemsSource="{Binding TargetBranchesView}" IsSynchronizedWithCurrentItem="True" />
+        <Label Content="_User Name:" HorizontalAlignment="Left" Margin="12,143,12,0" Name="UserNameLabel"
+                VerticalAlignment="Top" />
+        <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,172,58,0" Name="UserNameTextBox"
+                VerticalAlignment="Top" />
+        <Button Content="*" Height="23" HorizontalAlignment="Right" Margin="0,172,35,0" Name="FillCurrentUserNameButton"
+                VerticalAlignment="Top" Width="23" Click="FillCurrentUserNameButton_Click"
+                ToolTip="Fill with current user name" />
+        <Button Content="X" Height="23" HorizontalAlignment="Right" Margin="0,172,12,0" Name="ClearUserNameButton"
+                ToolTip="Clear user name" VerticalAlignment="Top" Width="23" Click="ClearUserNameButton_Click" />
+        <Button Content="_Search" Height="23" HorizontalAlignment="Left" Margin="12,201,0,0" Name="SearchButton"
+                VerticalAlignment="Top" Width="75" Click="SearchButton_Click" />
+        <Separator Height="5" HorizontalAlignment="Stretch" Margin="12,230,12,0" Name="ResultSeparator"
+                VerticalAlignment="Top" />
+        <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,238,12,0" Name="MergeDirectionTextBox"
+                VerticalAlignment="Top" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="#FFEEEEEE" />
+        <ListView Name="MergeCandidatesListView" Margin="12,267,12,12" HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening">
             <ListView.ContextMenu>
                 <ContextMenu FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}">
-                    <MenuItem Name="CopyChangesetNumberMenuItem"  Header="Copy Change_set #" Click="CopyChangesetNumberMenuItem_Click" />
+                    <MenuItem Name="CopyChangesetNumberMenuItem" Header="Copy Change_set #"
+                            Click="CopyChangesetNumberMenuItem_Click" />
                     <MenuItem Name="CopyCommentMenuItem" Header="Copy Co_mment" Click="CopyCommentMenuItem_Click" />
-                    <MenuItem Name="CopyWorkItemIdsMenuItem"  Header="Copy _WorkItem IDs" Click="CopyWorkItemIdsMenuItem_Click" />
+                    <MenuItem Name="CopyWorkItemIdsMenuItem" Header="Copy _WorkItem IDs"
+                            Click="CopyWorkItemIdsMenuItem_Click" />
                 </ContextMenu>
             </ListView.ContextMenu>
             <ListView.View>

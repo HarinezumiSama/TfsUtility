@@ -72,6 +72,8 @@ namespace TfsUtil
         {
             InitializeComponent();
 
+            this.Title = App.Current.ProductName;
+
             m_model = new MainWindowModel();
             this.DataContext = m_model;
 
