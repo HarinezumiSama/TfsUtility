@@ -22,7 +22,7 @@ namespace TfsUtil
     /// <summary>
     ///     Contains interaction logic for ProgressWindow.xaml.
     /// </summary>
-    public partial class ProgressWindow : Window
+    public sealed partial class ProgressWindow : Window
     {
         #region Fields
 
@@ -138,7 +138,7 @@ namespace TfsUtil
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!ComponentDispatcher.IsThreadModal)
+            if (!this.IsModal())
             {
                 throw new InvalidOperationException(
                     string.Format("The '{0}' instance must only be shown modally.", GetType().Name));
@@ -250,7 +250,7 @@ namespace TfsUtil
 
             progressWindow.ShowDialog();
 
-            return progressWindow.Result;  // ?? new ProgressResult(null, true, null);
+            return progressWindow.Result.EnsureNotNull();
         }
 
         #endregion

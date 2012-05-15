@@ -19,6 +19,7 @@ using Microsoft.TeamFoundation.Framework.Client;
 using Microsoft.TeamFoundation.Framework.Common;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using TfsUtil.Commands;
+using TfsUtil.Controls;
 using TfsUtil.Properties;
 
 namespace TfsUtil
@@ -86,8 +87,30 @@ namespace TfsUtil
 
         #region Regular
 
+        private bool HandleException(Exception exception)
+        {
+            if (exception == null)
+            {
+                return false;
+            }
+
+            this.ShowMessageBox(
+                string.Format(
+                    "An error occurred:{0}"
+                        + "[{1}] {2}",
+                    Environment.NewLine,
+                    exception.GetType().FullName,
+                    exception.Message),
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            return true;
+        }
+
         private void RefreshTfsServers()
         {
+            // TODO: [VM] Allow user to enter custom server URI
+
             this.ServerMenu.Items.Clear();
 
             var tfsCollections = RegisteredTfsConnections
@@ -96,7 +119,6 @@ namespace TfsUtil
                 .ThenBy(item => item.Uri)
                 .ToList();
 
-            var isChecked = true;
             MenuItem firstItem = null;
             foreach (var tfsCollection in tfsCollections)
             {
@@ -104,13 +126,11 @@ namespace TfsUtil
                 {
                     Header = tfsCollection.Name,
                     ToolTip = tfsCollection.Uri.AbsoluteUri,
-                    IsCheckable = true,
-                    IsChecked = isChecked,
+                    IsCheckable = false,  // Should not be checked/unchecked automatically
                     Tag = tfsCollection
                 };
                 serverItem.Click += this.ServerItem_Click;
 
-                isChecked = false;
                 firstItem = firstItem ?? serverItem;
 
                 this.ServerMenu.Items.Add(serverItem);
@@ -131,6 +151,20 @@ namespace TfsUtil
 
         private void SelectServer(MenuItem menuItem)
         {
+            if (HasCurrentContent())
+            {
+                var answer = this.ShowMessageBox(
+                    "If you change the current server, the content will be closed. Continue?",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+                if (answer != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                ClearCurrentContent();
+            }
+
             if (menuItem == null)
             {
                 m_model.TfsServerUri = null;
@@ -159,49 +193,24 @@ namespace TfsUtil
             m_model.TfsServerUri = tfsCollection.Uri;
         }
 
-        private bool HandleException(Exception exception, bool writeToLog)
+        private bool HasCurrentContent()
         {
-            if (exception == null)
-            {
-                return false;
-            }
+            return this.CurrentContent.Content != null;
+        }
 
-            MessageBox.Show(
-                this,
-                string.Format(
-                    "An error occurred:{0}"
-                        + "[{1}] {2}",
-                    Environment.NewLine,
-                    exception.GetType().FullName,
-                    exception.Message),
-                this.Title,
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+        private void SetCurrentContent(object content)
+        {
+            this.CurrentContent.Content = content;
+        }
 
-            if (writeToLog)
-            {
-                const string separatorFormat = "*****{0}";
-
-                logBox.AppendText(
-                    string.Format(
-                        "{0}"
-                            + separatorFormat
-                            + "[ERROR]{0}"
-                            + "[{1}] {2}{0}"
-                            + separatorFormat
-                            + "{0}",
-                        Environment.NewLine,
-                        exception.GetType().FullName,
-                        exception.Message));
-            }
-
-            return true;
+        private void ClearCurrentContent()
+        {
+            SetCurrentContent(null);
         }
 
         private void DoExecuteMergeSearch(object sender, ExecutedRoutedEventArgs e)
         {
-            var mergeSearchWindow = new MergeSearchWindow(m_model.TfsServerUri) { Owner = this };
-            mergeSearchWindow.ShowDialog();
+            SetCurrentContent(new MergeSearchControl(m_model.TfsServerUri));
         }
 
         #endregion
@@ -216,7 +225,7 @@ namespace TfsUtil
             }
             catch (Exception ex)
             {
-                if (!HandleException(ex, true))
+                if (!HandleException(ex))
                 {
                     throw;
                 }
@@ -225,12 +234,22 @@ namespace TfsUtil
 
         private void CanExecuteMergeSearch(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = m_model.TfsServerUri != null;
+            e.CanExecute = m_model.TfsServerUri != null && !(this.CurrentContent.Content is MergeSearchControl);
         }
 
         private void ServerItem_Click(object sender, RoutedEventArgs e)
         {
             SelectServer(e.Source as MenuItem);
+        }
+
+        private void CanCloseActiveContent(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = HasCurrentContent();
+        }
+
+        private void ExecuteCloseActiveContent(object sender, ExecutedRoutedEventArgs e)
+        {
+            ClearCurrentContent();
         }
 
         #endregion

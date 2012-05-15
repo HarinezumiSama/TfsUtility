@@ -7,8 +7,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
@@ -415,6 +417,96 @@ namespace TfsUtil
             };
 
             inputManager.ProcessInput(args);
+        }
+
+        public static MessageBoxResult ShowMessageBox(
+            this Window window,
+            string message,
+            MessageBoxButton button,
+            MessageBoxImage icon)
+        {
+            #region Argument Check
+
+            if (window == null)
+            {
+                throw new ArgumentNullException("window");
+            }
+
+            #endregion
+
+            return MessageBox.Show(window, message, window.Title, button, icon);
+        }
+
+        public static Window GetWindow(this Control control)
+        {
+            #region Argument Check
+
+            if (control == null)
+            {
+                throw new ArgumentNullException("control");
+            }
+
+            #endregion
+
+            var currentControl = (FrameworkElement)control;
+            while (currentControl != null)
+            {
+                var result = currentControl as Window;
+                if (result != null)
+                {
+                    return result;
+                }
+
+                currentControl = currentControl.Parent as FrameworkElement;
+            }
+
+            return null;
+        }
+
+        [DebuggerNonUserCode]
+        public static bool IsModal(this Window window)
+        {
+            #region Argument Check
+
+            if (window == null)
+            {
+                throw new ArgumentNullException("window");
+            }
+
+            #endregion
+
+            try
+            {
+                var windowInteropHelper = new WindowInteropHelper(window);
+                var handle = windowInteropHelper.Handle;
+                var automationElement = AutomationElement.FromHandle(handle);
+                if (automationElement == null)
+                {
+                    return false;
+                }
+
+                var isModalObject = automationElement.GetCurrentPropertyValue(WindowPattern.IsModalProperty, false);
+                if (isModalObject is bool)
+                {
+                    return (bool)isModalObject;
+                }
+
+                object patternObject;
+                if (automationElement.TryGetCurrentPattern(WindowPattern.Pattern, out patternObject))
+                {
+                    var pattern = patternObject as WindowPattern;
+                    if (pattern != null)
+                    {
+                        return pattern.Current.IsModal;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return false;
         }
 
         #endregion

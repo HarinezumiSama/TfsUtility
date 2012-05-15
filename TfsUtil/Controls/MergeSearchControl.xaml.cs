@@ -16,12 +16,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
-namespace TfsUtil
+namespace TfsUtil.Controls
 {
     /// <summary>
-    /// Interaction logic for MergeSearchWindow.xaml
+    /// Interaction logic for MergeSearchControl.xaml
     /// </summary>
-    public partial class MergeSearchWindow : Window
+    public partial class MergeSearchControl : UserControl
     {
         #region Nested Types
 
@@ -218,9 +218,9 @@ namespace TfsUtil
         #region Constructors
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="MergeSearchWindow"/> class.
+        ///     Initializes a new instance of the <see cref="MergeSearchControl"/> class.
         /// </summary>
-        private MergeSearchWindow()
+        private MergeSearchControl()
         {
             InitializeComponent();
 
@@ -229,9 +229,9 @@ namespace TfsUtil
         }
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="MergeSearchWindow"/> class.
+        ///     Initializes a new instance of the <see cref="MergeSearchControl"/> class.
         /// </summary>
-        public MergeSearchWindow(Uri tfsServerUri)
+        public MergeSearchControl(Uri tfsServerUri)
             : this()
         {
             #region Argument Check
@@ -300,7 +300,9 @@ namespace TfsUtil
         {
             this.SourceBranchPopup.Width = this.SourceBranchComboBox.ActualWidth;
 
-            this.SourceBranchPopup.IsOpen = this.IsActive
+            var window = this.GetWindow();
+            this.SourceBranchPopup.IsOpen = window != null
+                && window.IsActive
                 && this.SourceBranchComboBox.IsKeyboardFocusWithin
                 && !this.SourceBranchComboBox.IsDropDownOpen
                 && this.SourceBranchPopupListBox.HasItems;
@@ -393,9 +395,10 @@ namespace TfsUtil
             }
             this.MergeDirectionTextBox.Text = mergeDirection.ToString();
 
+            var window = this.GetWindow();
             var pr = ProgressWindow.Execute(
-                this,
-                this.Title,
+                window,
+                window.EnsureNotNull().Title,
                 "Searching for changesets to merge...",
                 pw =>
                 {
@@ -486,11 +489,8 @@ namespace TfsUtil
 
         #region Event Handlers
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Control_Loaded(object sender, RoutedEventArgs e)
         {
-            this.Title = string.Format("{0} — {1}", this.Title, App.Current.ProductName);
-            App.DoEvents();
-
             Initialize();
         }
 

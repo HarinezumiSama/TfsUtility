@@ -16,6 +16,12 @@ namespace TfsUtil.Commands
             typeof(AppCommands),
             new InputGestureCollection { new KeyGesture(Key.M, ModifierKeys.Control) });
 
+        public static readonly RoutedUICommand CloseActiveContent = new RoutedUICommand(
+            "Close Active Content",
+            "CloseActiveContent",
+            typeof(AppCommands),
+            new InputGestureCollection { new KeyGesture(Key.W, ModifierKeys.Control) });
+
         #endregion
     }
 }
