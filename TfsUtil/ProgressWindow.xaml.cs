@@ -3,18 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Windows.Shell;
 using System.Windows.Threading;
 
 namespace TfsUtil
@@ -26,24 +16,118 @@ namespace TfsUtil
     {
         #region Fields
 
-        private readonly object m_resultLock = new object();
-        private ProgressResult m_result;
-        private readonly Thread m_thread;
-        private Func<ProgressWindow, object> m_action;
-        private bool m_isCancelling;
+        private readonly object _resultLock = new object();
+        private readonly Thread _thread;
+        private ProgressResult _result;
+        private Func<ProgressWindow, object> _action;
+        private bool _isCancelling;
 
         #endregion
 
         #region Constructors
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ProgressWindow"/> class.
+        ///     Prevents a default instance of the <see cref="ProgressWindow"/> class from being created.
         /// </summary>
         private ProgressWindow()
         {
             InitializeComponent();
 
-            m_thread = new Thread(this.DoWork) { Name = GetType().Name };
+            _thread = new Thread(this.DoWork) { Name = GetType().Name };
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        public string OperationDescription
+        {
+            get
+            {
+                return this.OperationDescriptionTextBlock.GetValueSafe(c => c.Text);
+            }
+
+            set
+            {
+                this.OperationDescriptionTextBlock.ExecuteActionSafe(c => c.Text = value ?? string.Empty);
+            }
+        }
+
+        public ProgressResult Result
+        {
+            [DebuggerNonUserCode]
+            get
+            {
+                lock (_resultLock)
+                {
+                    return _result;
+                }
+            }
+
+            [DebuggerNonUserCode]
+            private set
+            {
+                lock (_resultLock)
+                {
+                    _result = value;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public static ProgressResult Execute(
+            Window owner,
+            string title,
+            string operationDescription,
+            Func<ProgressWindow, object> action)
+        {
+            #region Argument Check
+
+            if (string.IsNullOrEmpty(title))
+            {
+                throw new ArgumentException("The value can be neither empty string nor null.", "title");
+            }
+
+            if (string.IsNullOrEmpty(operationDescription))
+            {
+                throw new ArgumentException("The value can be neither empty string nor null.", "operationDescription");
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            #endregion
+
+            var progressWindow = new ProgressWindow
+            {
+                Owner = owner,
+                Title = title,
+                OperationDescription = operationDescription,
+                _action = action
+            };
+
+            progressWindow.ShowDialog();
+
+            return progressWindow.Result.EnsureNotNull();
+        }
+
+        #endregion
+
+        #region Protected Methods
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (AskCancel())
+            {
+                e.Cancel = true;
+            }
+
+            base.OnClosing(e);
         }
 
         #endregion
@@ -59,7 +143,7 @@ namespace TfsUtil
                 return false;
             }
 
-            if (m_isCancelling)
+            if (_isCancelling)
             {
                 return true;
             }
@@ -76,12 +160,12 @@ namespace TfsUtil
                 return true;
             }
 
-            m_isCancelling = true;
+            _isCancelling = true;
             this.CancelButton.IsEnabled = false;
 
-            if (m_thread.IsAlive)
+            if (_thread.IsAlive)
             {
-                m_thread.Abort();
+                _thread.Abort();
             }
 
             return true;
@@ -92,7 +176,7 @@ namespace TfsUtil
             object actionResult;
             try
             {
-                actionResult = m_action(this);
+                actionResult = _action(this);
             }
             catch (Exception ex)
             {
@@ -150,9 +234,9 @@ namespace TfsUtil
                     string.Format("The '{0}' instance can only be run once.", GetType().Name));
             }
 
-            if (m_action != null)
+            if (_action != null)
             {
-                m_thread.Start();
+                _thread.Start();
             }
         }
 
@@ -162,96 +246,6 @@ namespace TfsUtil
         }
 
         #endregion
-
-        #endregion
-
-        #region Protected Methods
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            if (AskCancel())
-            {
-                e.Cancel = true;
-            }
-
-            base.OnClosing(e);
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        public string OperationDescription
-        {
-            get
-            {
-                return this.OperationDescriptionTextBlock.GetValueSafe(c => c.Text);
-            }
-            set
-            {
-                this.OperationDescriptionTextBlock.ExecuteActionSafe(c => c.Text = value ?? string.Empty);
-            }
-        }
-
-        public ProgressResult Result
-        {
-            [DebuggerNonUserCode]
-            get
-            {
-                lock (m_resultLock)
-                {
-                    return m_result;
-                }
-            }
-            [DebuggerNonUserCode]
-            private set
-            {
-                lock (m_resultLock)
-                {
-                    m_result = value;
-                }
-            }
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        public static ProgressResult Execute(
-            Window owner,
-            string title,
-            string operationDescription,
-            Func<ProgressWindow, object> action)
-        {
-            #region Argument Check
-
-            if (string.IsNullOrEmpty(title))
-            {
-                throw new ArgumentException("The value can be neither empty string nor null.", "title");
-            }
-            if (string.IsNullOrEmpty(operationDescription))
-            {
-                throw new ArgumentException("The value can be neither empty string nor null.", "operationDescription");
-            }
-            if (action == null)
-            {
-                throw new ArgumentNullException("action");
-            }
-
-            #endregion
-
-            var progressWindow = new ProgressWindow
-            {
-                Owner = owner,
-                Title = title,
-                OperationDescription = operationDescription,
-                m_action = action
-            };
-
-            progressWindow.ShowDialog();
-
-            return progressWindow.Result.EnsureNotNull();
-        }
 
         #endregion
     }

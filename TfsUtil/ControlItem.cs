@@ -75,6 +75,7 @@ namespace TfsUtil
             {
                 return false;
             }
+
             if (object.ReferenceEquals(other, this))
             {
                 return true;

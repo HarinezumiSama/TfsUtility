@@ -24,9 +24,10 @@ namespace TfsUtil
             {
                 throw new ArgumentNullException("mergeCandidate");
             }
+
             if (mergeCandidate.Changeset == null)
             {
-                throw new ArgumentException("The associated changeset cannot be null.", "mergeCandidate");
+                throw new ArgumentException(@"The associated changeset cannot be null.", "mergeCandidate");
             }
 
             #endregion

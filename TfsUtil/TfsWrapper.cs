@@ -23,8 +23,8 @@ namespace TfsUtil
 
         #region Fields
 
-        private readonly TfsTeamProjectCollection m_teamProjectCollection;
-        private readonly Lazy<VersionControlServer> m_versionControlServerLazy;
+        private readonly TfsTeamProjectCollection _teamProjectCollection;
+        private readonly Lazy<VersionControlServer> _versionControlServerLazy;
 
         #endregion
 
@@ -45,43 +45,8 @@ namespace TfsUtil
 
             #endregion
 
-            m_teamProjectCollection = new TfsTeamProjectCollection(url);
-            m_versionControlServerLazy = new Lazy<VersionControlServer>(() => GetService<VersionControlServer>());
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private void EnsureNotDisposed()
-        {
-            if (this.IsDisposed)
-            {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
-        }
-
-        [DebuggerNonUserCode]
-        private ItemSet GetItemsInternal(string folder)
-        {
-            if (string.IsNullOrWhiteSpace(folder))
-            {
-                return null;
-            }
-
-            if (folder == TfsRoot)
-            {
-                folder += TfsPathSeparator;
-            }
-
-            try
-            {
-                return this.VersionControlServer.GetItems(folder, RecursionType.OneLevel);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            _teamProjectCollection = new TfsTeamProjectCollection(url);
+            _versionControlServerLazy = new Lazy<VersionControlServer>(() => GetService<VersionControlServer>());
         }
 
         #endregion
@@ -99,7 +64,7 @@ namespace TfsUtil
             get
             {
                 EnsureNotDisposed();
-                return m_teamProjectCollection;
+                return _teamProjectCollection;
             }
         }
 
@@ -108,7 +73,7 @@ namespace TfsUtil
             get
             {
                 EnsureNotDisposed();
-                return m_versionControlServerLazy.Value;
+                return _versionControlServerLazy.Value;
             }
         }
 
@@ -119,7 +84,7 @@ namespace TfsUtil
         public T GetService<T>()
         {
             EnsureNotDisposed();
-            return m_teamProjectCollection.GetService<T>();
+            return _teamProjectCollection.GetService<T>();
         }
 
         public IEnumerable<string> GetSuggestions(string path)
@@ -191,9 +156,44 @@ namespace TfsUtil
                 return;
             }
 
-            m_teamProjectCollection.Dispose();
+            _teamProjectCollection.Dispose();
 
             this.IsDisposed = true;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void EnsureNotDisposed()
+        {
+            if (this.IsDisposed)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+        }
+
+        [DebuggerNonUserCode]
+        private ItemSet GetItemsInternal(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder))
+            {
+                return null;
+            }
+
+            if (folder == TfsRoot)
+            {
+                folder += TfsPathSeparator;
+            }
+
+            try
+            {
+                return this.VersionControlServer.GetItems(folder, RecursionType.OneLevel);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         #endregion

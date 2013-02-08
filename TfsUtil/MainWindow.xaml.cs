@@ -31,39 +31,9 @@ namespace TfsUtil
     /// </summary>
     public partial class MainWindow : Window
     {
-        #region Nested Types
-
-        #region MainWindowModel Class
-
-        private sealed class MainWindowModel
-        {
-            #region Constructors
-
-            internal MainWindowModel()
-            {
-                // Nothing to do
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            public Uri TfsServerUri
-            {
-                get;
-                set;
-            }
-
-            #endregion
-        }
-
-        #endregion
-
-        #endregion
-
         #region Fields
 
-        private readonly MainWindowModel m_model;
+        private readonly MainWindowModel _model;
 
         #endregion
 
@@ -75,8 +45,8 @@ namespace TfsUtil
 
             this.Title = App.Current.ProductName;
 
-            m_model = new MainWindowModel();
-            this.DataContext = m_model;
+            _model = new MainWindowModel();
+            this.DataContext = _model;
 
             this.RefreshTfsServers();
         }
@@ -109,7 +79,7 @@ namespace TfsUtil
 
         private void RefreshTfsServers()
         {
-            // TODO: [VM] Allow user to enter custom server URI
+            //// TODO: [VM] Allow user to enter custom server URI
 
             this.ServerMenu.Items.Clear();
 
@@ -167,7 +137,7 @@ namespace TfsUtil
 
             if (menuItem == null)
             {
-                m_model.TfsServerUri = null;
+                _model.TfsServerUri = null;
                 return;
             }
 
@@ -185,12 +155,12 @@ namespace TfsUtil
             var tfsCollection = menuItem.Tag as RegisteredProjectCollection;
             if (tfsCollection == null)
             {
-                m_model.TfsServerUri = null;
+                _model.TfsServerUri = null;
                 return;
             }
 
             menuItem.IsChecked = true;
-            m_model.TfsServerUri = tfsCollection.Uri;
+            _model.TfsServerUri = tfsCollection.Uri;
         }
 
         private bool HasCurrentContent()
@@ -210,7 +180,7 @@ namespace TfsUtil
 
         private void DoExecuteMergeSearch(object sender, ExecutedRoutedEventArgs e)
         {
-            SetCurrentContent(new MergeSearchControl(m_model.TfsServerUri));
+            SetCurrentContent(new MergeSearchControl(_model.TfsServerUri));
         }
 
         #endregion
@@ -234,7 +204,7 @@ namespace TfsUtil
 
         private void CanExecuteMergeSearch(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = m_model.TfsServerUri != null && !(this.CurrentContent.Content is MergeSearchControl);
+            e.CanExecute = _model.TfsServerUri != null && !(this.CurrentContent.Content is MergeSearchControl);
         }
 
         private void ServerItem_Click(object sender, RoutedEventArgs e)
@@ -250,6 +220,36 @@ namespace TfsUtil
         private void ExecuteCloseActiveContent(object sender, ExecutedRoutedEventArgs e)
         {
             ClearCurrentContent();
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Nested Types
+
+        #region MainWindowModel Class
+
+        private sealed class MainWindowModel
+        {
+            #region Constructors
+
+            internal MainWindowModel()
+            {
+                // Nothing to do
+            }
+
+            #endregion
+
+            #region Public Properties
+
+            public Uri TfsServerUri
+            {
+                get;
+                set;
+            }
+
+            #endregion
         }
 
         #endregion

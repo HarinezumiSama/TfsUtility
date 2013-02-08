@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
@@ -33,28 +32,6 @@ namespace TfsUtil
         /// </summary>
         private const string InvalidExpressionMessageAutoFormat =
             "Invalid expression (must be a getter of a property of some type): {{ {0} }}.";
-
-        #endregion
-
-        #region Private Methods
-
-        private static TAttribute GetSoleAttributeInternal<TAttribute>(
-            this ICustomAttributeProvider attributeProvider,
-            bool inherit,
-            Func<IEnumerable<TAttribute>, TAttribute> getter)
-        {
-            #region Argument Check
-
-            if (attributeProvider == null)
-            {
-                throw new ArgumentNullException("attributeProvider");
-            }
-
-            #endregion
-
-            var attributes = attributeProvider.GetCustomAttributes(typeof(TAttribute), inherit).OfType<TAttribute>();
-            return getter(attributes);
-        }
 
         #endregion
 
@@ -270,6 +247,7 @@ namespace TfsUtil
             {
                 throw new ArgumentNullException("collection");
             }
+
             if (newContents == null)
             {
                 throw new ArgumentNullException("newContents");
@@ -339,6 +317,7 @@ namespace TfsUtil
             {
                 throw new ArgumentNullException("control");
             }
+
             if (getValue == null)
             {
                 throw new ArgumentNullException("getValue");
@@ -362,6 +341,7 @@ namespace TfsUtil
             {
                 throw new ArgumentNullException("control");
             }
+
             if (action == null)
             {
                 throw new ArgumentNullException("action");
@@ -507,6 +487,28 @@ namespace TfsUtil
             }
 
             return false;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static TAttribute GetSoleAttributeInternal<TAttribute>(
+            this ICustomAttributeProvider attributeProvider,
+            bool inherit,
+            Func<IEnumerable<TAttribute>, TAttribute> getter)
+        {
+            #region Argument Check
+
+            if (attributeProvider == null)
+            {
+                throw new ArgumentNullException("attributeProvider");
+            }
+
+            #endregion
+
+            var attributes = attributeProvider.GetCustomAttributes(typeof(TAttribute), inherit).OfType<TAttribute>();
+            return getter(attributes);
         }
 
         #endregion

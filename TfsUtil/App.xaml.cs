@@ -13,7 +13,7 @@ using TfsUtil.Commands;
 namespace TfsUtil
 {
     /// <summary>
-    ///     Interaction logic for App.xaml
+    ///     Interaction logic for App.xaml.
     /// </summary>
     public partial class App : Application
     {
@@ -27,61 +27,6 @@ namespace TfsUtil
             Initialize();
 
             AppDomain.CurrentDomain.UnhandledException += this.CurrentDomain_UnhandledException;
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private static void KillThisProcess()
-        {
-            Process.GetCurrentProcess().Kill();
-        }
-
-        private void Initialize()
-        {
-            try
-            {
-                InitializeProperties();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    string.Format(
-                        "The application failed to initialize properly:{0}"
-                            + "{0}"
-                            + "[{1}] {2}{0}"
-                            + "{0}"
-                            + "The application will now terminate.",
-                        Environment.NewLine,
-                        ex.GetType().FullName,
-                        ex.Message),
-                    typeof(App).Namespace,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                KillThisProcess();
-            }
-        }
-
-        private void InitializeProperties()
-        {
-            var assembly = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()) ?? GetType().Assembly;
-
-            // Independent properties
-
-            this.ProductName = assembly.GetSoleAttributeStrict<AssemblyProductAttribute>().Product;
-            this.ProductVersion = assembly.GetName().Version;
-            this.ProductCopyright = assembly.GetSoleAttributeStrict<AssemblyCopyrightAttribute>().Copyright;
-
-            // Dependent properties
-
-            this.FullProductName = string.Format("{0} {1}", this.ProductName, this.ProductVersion);
-            this.FullProductDescription = string.Format(
-                "{0} {1} {2}",
-                this.ProductName,
-                this.ProductVersion,
-                this.ProductCopyright);
         }
 
         #endregion
@@ -141,7 +86,58 @@ namespace TfsUtil
 
         #endregion
 
-        #region Event Handlers
+        #region Private Methods
+
+        private static void KillThisProcess()
+        {
+            Process.GetCurrentProcess().Kill();
+        }
+
+        private void Initialize()
+        {
+            try
+            {
+                InitializeProperties();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    string.Format(
+                        "The application failed to initialize properly:{0}"
+                            + "{0}"
+                            + "[{1}] {2}{0}"
+                            + "{0}"
+                            + "The application will now terminate.",
+                        Environment.NewLine,
+                        ex.GetType().FullName,
+                        ex.Message),
+                    typeof(App).Namespace,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                KillThisProcess();
+            }
+        }
+
+        private void InitializeProperties()
+        {
+            var assembly = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()) ?? GetType().Assembly;
+
+            //// Independent properties
+
+            this.ProductName = assembly.GetSoleAttributeStrict<AssemblyProductAttribute>().Product;
+            this.ProductVersion = assembly.GetName().Version;
+            this.ProductCopyright = assembly.GetSoleAttributeStrict<AssemblyCopyrightAttribute>().Copyright;
+
+            //// Dependent properties
+
+            this.FullProductName = string.Format("{0} {1}", this.ProductName, this.ProductVersion);
+            this.FullProductDescription = string.Format(
+                "{0} {1} {2}",
+                this.ProductName,
+                this.ProductVersion,
+                this.ProductCopyright);
+        }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
