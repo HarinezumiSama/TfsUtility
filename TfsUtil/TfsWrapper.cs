@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation.Framework.Client;
-using Microsoft.TeamFoundation.Framework.Common;
 using Microsoft.TeamFoundation.VersionControl.Client;
-using TfsUtil.Properties;
 
 namespace TfsUtil
 {
@@ -46,7 +42,7 @@ namespace TfsUtil
             #endregion
 
             _teamProjectCollection = new TfsTeamProjectCollection(url);
-            _versionControlServerLazy = new Lazy<VersionControlServer>(() => GetService<VersionControlServer>());
+            _versionControlServerLazy = new Lazy<VersionControlServer>(GetService<VersionControlServer>);
         }
 
         #endregion

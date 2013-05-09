@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace TfsUtil
 {
@@ -25,7 +24,7 @@ namespace TfsUtil
         ///     using the specified item.
         /// </summary>
         public ControlItem(T item)
-            : this(item, item == null ? string.Empty : item.ToString())
+            : this(item, ReferenceEquals(item, null) ? string.Empty : item.ToString())
         {
             // Nothing to do
         }
@@ -57,7 +56,7 @@ namespace TfsUtil
 
         public override int GetHashCode()
         {
-            return this.Item == null ? 0 : this.Item.GetHashCode();
+            return ReferenceEquals(this.Item, null) ? 0 : this.Item.GetHashCode();
         }
 
         public override string ToString()
@@ -71,12 +70,12 @@ namespace TfsUtil
 
         public bool Equals(ControlItem<T> other)
         {
-            if (object.ReferenceEquals(other, null))
+            if (ReferenceEquals(other, null))
             {
                 return false;
             }
 
-            if (object.ReferenceEquals(other, this))
+            if (ReferenceEquals(other, this))
             {
                 return true;
             }

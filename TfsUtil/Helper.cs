@@ -102,7 +102,7 @@ namespace TfsUtil
             }
             else
             {
-                ParameterExpression parameterExpression = memberExpression.Expression as ParameterExpression;
+                var parameterExpression = memberExpression.Expression as ParameterExpression;
                 if ((parameterExpression == null) || (parameterExpression.NodeType != ExpressionType.Parameter) ||
                     (parameterExpression.Type != typeof(TObject)))
                 {
@@ -243,7 +243,7 @@ namespace TfsUtil
         {
             #region Argument Check
 
-            if (collection == null)
+            if (ReferenceEquals(collection, null))
             {
                 throw new ArgumentNullException("collection");
             }
@@ -373,11 +373,7 @@ namespace TfsUtil
 
             #endregion
 
-            var inputManager = InputManager.Current;
-            if (inputManager == null)
-            {
-                return;
-            }
+            var inputManager = InputManager.Current.EnsureNotNull();
 
             var keyboardDevice = inputManager.PrimaryKeyboardDevice;
             if (keyboardDevice == null)

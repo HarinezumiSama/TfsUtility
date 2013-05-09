@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Threading;
-using TfsUtil.Commands;
 
 namespace TfsUtil
 {
     /// <summary>
     ///     Interaction logic for App.xaml.
     /// </summary>
-    public partial class App : Application
+    public partial class App
     {
         #region Constructors
 
@@ -121,7 +117,7 @@ namespace TfsUtil
 
         private void InitializeProperties()
         {
-            var assembly = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()) ?? GetType().Assembly;
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
 
             //// Independent properties
 

@@ -1,42 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Security.Principal;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation.Framework.Client;
-using Microsoft.TeamFoundation.Framework.Common;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using TfsUtil.Commands;
 using TfsUtil.Controls;
-using TfsUtil.Properties;
 
 namespace TfsUtil
 {
-    // TODO: [VM] Implement MDI-like (New Merge Search menu item creates a new `MDI` window)
+    //// TODO: [VM] Implement MDI-like (New Merge Search menu item creates a new `MDI` window)
 
     /// <summary>
     ///     Contains interaction logic for MainWindow.xaml.
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
-        #region Fields
-
-        private readonly MainWindowModel _model;
-
-        #endregion
-
         #region Constructors
 
         public MainWindow()
@@ -44,9 +23,6 @@ namespace TfsUtil
             InitializeComponent();
 
             this.Title = App.Current.ProductName;
-
-            _model = new MainWindowModel();
-            this.DataContext = _model;
 
             this.RefreshTfsServers();
         }
@@ -92,7 +68,7 @@ namespace TfsUtil
             MenuItem firstItem = null;
             foreach (var tfsCollection in tfsCollections)
             {
-                var serverItem = new MenuItem()
+                var serverItem = new MenuItem
                 {
                     Header = tfsCollection.Name,
                     ToolTip = tfsCollection.Uri.AbsoluteUri,
@@ -111,7 +87,7 @@ namespace TfsUtil
             if (!this.ServerMenu.HasItems)
             {
                 this.ServerMenu.Items.Add(
-                    new MenuItem()
+                    new MenuItem
                     {
                         Header = "No registered servers found.",
                         IsEnabled = false
@@ -137,7 +113,7 @@ namespace TfsUtil
 
             if (menuItem == null)
             {
-                _model.TfsServerUri = null;
+                this.ViewModel.TfsServerUri = null;
                 return;
             }
 
@@ -155,12 +131,12 @@ namespace TfsUtil
             var tfsCollection = menuItem.Tag as RegisteredProjectCollection;
             if (tfsCollection == null)
             {
-                _model.TfsServerUri = null;
+                this.ViewModel.TfsServerUri = null;
                 return;
             }
 
             menuItem.IsChecked = true;
-            _model.TfsServerUri = tfsCollection.Uri;
+            this.ViewModel.TfsServerUri = tfsCollection.Uri;
         }
 
         private bool HasCurrentContent()
@@ -178,9 +154,9 @@ namespace TfsUtil
             SetCurrentContent(null);
         }
 
-        private void DoExecuteMergeSearch(object sender, ExecutedRoutedEventArgs e)
+        private void DoExecuteMergeSearch()
         {
-            SetCurrentContent(new MergeSearchControl(_model.TfsServerUri));
+            SetCurrentContent(new MergeSearchControl(this.ViewModel.TfsServerUri));
         }
 
         #endregion
@@ -191,7 +167,7 @@ namespace TfsUtil
         {
             try
             {
-                DoExecuteMergeSearch(sender, e);
+                DoExecuteMergeSearch();
             }
             catch (Exception ex)
             {
@@ -204,7 +180,7 @@ namespace TfsUtil
 
         private void CanExecuteMergeSearch(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = _model.TfsServerUri != null && !(this.CurrentContent.Content is MergeSearchControl);
+            e.CanExecute = this.ViewModel.TfsServerUri != null && !(this.CurrentContent.Content is MergeSearchControl);
         }
 
         private void ServerItem_Click(object sender, RoutedEventArgs e)
@@ -220,36 +196,6 @@ namespace TfsUtil
         private void ExecuteCloseActiveContent(object sender, ExecutedRoutedEventArgs e)
         {
             ClearCurrentContent();
-        }
-
-        #endregion
-
-        #endregion
-
-        #region Nested Types
-
-        #region MainWindowModel Class
-
-        private sealed class MainWindowModel
-        {
-            #region Constructors
-
-            internal MainWindowModel()
-            {
-                // Nothing to do
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            public Uri TfsServerUri
-            {
-                get;
-                set;
-            }
-
-            #endregion
         }
 
         #endregion

@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
 namespace TfsUtil.Controls
@@ -22,14 +16,8 @@ namespace TfsUtil.Controls
     /// <summary>
     ///     Interaction logic for &quot;MergeSearchControl.xaml&quot;.
     /// </summary>
-    public partial class MergeSearchControl : UserControl
+    public partial class MergeSearchControl
     {
-        #region Fields
-
-        private readonly MergeSearchWindowModel _model;
-
-        #endregion
-
         #region Constructors
 
         /// <summary>
@@ -47,7 +35,7 @@ namespace TfsUtil.Controls
 
             #endregion
 
-            _model.TfsServerUri = tfsServerUri;
+            this.ViewModel.TfsServerUri = tfsServerUri;
         }
 
         /// <summary>
@@ -56,9 +44,6 @@ namespace TfsUtil.Controls
         private MergeSearchControl()
         {
             InitializeComponent();
-
-            _model = new MergeSearchWindowModel();
-            this.DataContext = _model;
         }
 
         #endregion
@@ -80,7 +65,7 @@ namespace TfsUtil.Controls
 
         private void Initialize()
         {
-            _model.RefreshSourceBranches();
+            this.ViewModel.RefreshSourceBranches();
         }
 
         private void SetMergeCandidatesListViewBackText(string text)
@@ -92,7 +77,7 @@ namespace TfsUtil.Controls
             }
 
             this.MergeCandidatesListView.Background = new VisualBrush(
-                new TextBlock()
+                new TextBlock
                 {
                     Text = text,
                     ToolTip = text,
@@ -132,21 +117,21 @@ namespace TfsUtil.Controls
         {
             this.SourceBranchPopupListBox.Items.Clear();
 
-            var sourceBranchText = _model.SourceBranch;
+            var sourceBranchText = this.ViewModel.SourceBranch;
             if (string.IsNullOrWhiteSpace(sourceBranchText))
             {
                 return;
             }
 
             IEnumerable<string> suggestions;
-            using (var tfsWrapper = _model.CreateTfsWrapper())
+            using (var tfsWrapper = this.ViewModel.CreateTfsWrapper())
             {
                 suggestions = tfsWrapper.GetSuggestions(sourceBranchText);
             }
 
             foreach (var suggestion in suggestions)
             {
-                var lbi = new ListBoxItem()
+                var lbi = new ListBoxItem
                 {
                     Content = suggestion,
                     Tag = suggestion,
@@ -183,7 +168,7 @@ namespace TfsUtil.Controls
             this.MergeDirectionTextBox.Clear();
             SetMergeCandidatesListViewBackText(null);
 
-            var sourceBranch = _model.SourceBranch;
+            var sourceBranch = this.ViewModel.SourceBranch;
             if (string.IsNullOrWhiteSpace(sourceBranch))
             {
                 SetMergeCandidatesListViewBackText("The source branch is not selected properly.");
@@ -218,7 +203,7 @@ namespace TfsUtil.Controls
                 "Searching for changesets to merge...",
                 pw =>
                 {
-                    using (var tfsWrapper = _model.CreateTfsWrapper())
+                    using (var tfsWrapper = this.ViewModel.CreateTfsWrapper())
                     {
                         return tfsWrapper
                             .VersionControlServer
@@ -331,7 +316,7 @@ namespace TfsUtil.Controls
             UpdateSourceBranchPopupList();
             UpdateSourceBranchPopupState();
 
-            _model.RefreshTargetBranches();
+            this.ViewModel.RefreshTargetBranches();
         }
 
         private void SourceBranchComboBox_DropDownOpened(object sender, EventArgs e)
@@ -413,10 +398,10 @@ namespace TfsUtil.Controls
             }
         }
 
-        private void Window_Deactivated(object sender, EventArgs e)
-        {
-            UpdateSourceBranchPopupState();
-        }
+        ////private void Window_Deactivated(object sender, EventArgs e)
+        ////{
+        ////    UpdateSourceBranchPopupState();
+        ////}
 
         private void MergeCandidatesListView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
@@ -429,7 +414,7 @@ namespace TfsUtil.Controls
 
             var isSoleItemSelected = this.MergeCandidatesListView.SelectedItems.Count == 1;
 
-            var mergeCandidate = new Lazy<MergeCandidateWrapper>(() => GetSoleSelectedMergeCandidate());
+            var mergeCandidate = new Lazy<MergeCandidateWrapper>(GetSoleSelectedMergeCandidate);
 
             this.CopyChangesetNumberMenuItem.IsEnabled = isSoleItemSelected;
             this.CopyCommentMenuItem.IsEnabled = isSoleItemSelected;
@@ -452,193 +437,6 @@ namespace TfsUtil.Controls
         private void CopyWorkItemIdsMenuItem_Click(object sender, RoutedEventArgs e)
         {
             CopySoleSelectedMergeCandidateDataToClipboard(mc => mc.WorkItemIdsAsString);
-        }
-
-        #endregion
-
-        #endregion
-
-        #region Nested Types
-
-        #region MergeSearchWindowModel Class
-
-        private sealed class MergeSearchWindowModel : INotifyPropertyChanged
-        {
-            #region Fields
-
-            private string _sourceBranch;
-
-            #endregion
-
-            #region Constructors
-
-            public MergeSearchWindowModel()
-            {
-                _sourceBranch = string.Empty;
-
-                this.SourceBranches = new List<ControlItem<ItemIdentifier>>();
-                this.SourceBranchesView = CollectionViewSource.GetDefaultView(this.SourceBranches);
-                this.SourceBranchesView.CurrentChanged += this.SourceBranchesView_CurrentChanged;
-
-                this.TargetBranches = new List<ControlItem<ItemIdentifier>>();
-                this.TargetBranchesView = CollectionViewSource.GetDefaultView(this.TargetBranches);
-            }
-
-            #endregion
-
-            #region INotifyPropertyChanged Members
-
-            public event PropertyChangedEventHandler PropertyChanged;
-
-            #endregion
-
-            #region Public Properties
-
-            public Uri TfsServerUri
-            {
-                get;
-                set;
-            }
-
-            public ICollectionView SourceBranchesView
-            {
-                get;
-                private set;
-            }
-
-            public ICollectionView TargetBranchesView
-            {
-                get;
-                private set;
-            }
-
-            public string SourceBranch
-            {
-                [DebuggerStepThrough]
-                get
-                {
-                    return _sourceBranch;
-                }
-
-                set
-                {
-                    var actualValue = value ?? string.Empty;
-                    if (_sourceBranch != actualValue)
-                    {
-                        _sourceBranch = actualValue;
-                        RaisePropertyChanged(Helper.GetPropertyName((MergeSearchWindowModel obj) => obj.SourceBranch));
-                    }
-                }
-            }
-
-            #endregion
-
-            #region Internal Properties
-
-            internal List<ControlItem<ItemIdentifier>> SourceBranches
-            {
-                get;
-                private set;
-            }
-
-            internal List<ControlItem<ItemIdentifier>> TargetBranches
-            {
-                get;
-                private set;
-            }
-
-            #endregion
-
-            #region Public Methods
-
-            public TfsWrapper CreateTfsWrapper()
-            {
-                return new TfsWrapper(this.TfsServerUri);
-            }
-
-            public void RefreshSourceBranches()
-            {
-                BranchObject[] branchObjects;
-                using (var tfsWrapper = CreateTfsWrapper())
-                {
-                    branchObjects = tfsWrapper.VersionControlServer.QueryRootBranchObjects(RecursionType.Full);
-                }
-
-                var branchItems = branchObjects
-                    .SelectMany(
-                        item => item
-                            .ChildBranches
-                            .Concat(item.RelatedBranches)
-                            .Concat(item.Properties.RootItem.AsCollection()))
-                    .Select(item => item.Item)
-                    .Distinct()
-                    .OrderBy(item => item)
-                    .Select(item => ControlItem.Create(new ItemIdentifier(item), item))
-                    .ToArray();
-
-                this.SourceBranches.ReplaceContents(branchItems);
-
-                this.SourceBranchesView.Refresh();
-                this.SourceBranchesView.MoveCurrentToFirst();
-
-                RefreshTargetBranches();
-            }
-
-            public void RefreshTargetBranches()
-            {
-                this.TargetBranches.Clear();
-
-                var sourceBranch = this.SourceBranch;
-
-                var mergeRelationships = Enumerable.Empty<ItemIdentifier>();
-                if (!string.IsNullOrWhiteSpace(sourceBranch))
-                {
-                    using (var tfsWrapper = CreateTfsWrapper())
-                    {
-                        var vcs = tfsWrapper.VersionControlServer;
-                        if (vcs.ServerItemExistsSafe(sourceBranch, ItemType.Any))
-                        {
-                            mergeRelationships = vcs.QueryMergeRelationships(sourceBranch);
-                        }
-                    }
-                }
-
-                var targetBranches = mergeRelationships
-                    .Select(item => ControlItem.Create(item, item.Item))
-                    .ToArray();
-
-                this.TargetBranches.ReplaceContents(targetBranches);
-
-                this.TargetBranchesView.Refresh();
-                this.TargetBranchesView.MoveCurrentToFirst();
-            }
-
-            #endregion
-
-            #region Private Methods
-
-            private void RaisePropertyChanged(string propertyName)
-            {
-                if (string.IsNullOrEmpty(propertyName))
-                {
-                    return;
-                }
-
-                var propertyChanged = this.PropertyChanged;
-                if (propertyChanged == null)
-                {
-                    return;
-                }
-
-                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-
-            private void SourceBranchesView_CurrentChanged(object sender, EventArgs e)
-            {
-                RefreshTargetBranches();
-            }
-
-            #endregion
         }
 
         #endregion

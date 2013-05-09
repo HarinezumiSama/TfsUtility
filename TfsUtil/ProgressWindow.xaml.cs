@@ -12,7 +12,7 @@ namespace TfsUtil
     /// <summary>
     ///     Contains interaction logic for ProgressWindow.xaml.
     /// </summary>
-    public sealed partial class ProgressWindow : Window
+    public sealed partial class ProgressWindow
     {
         #region Fields
 
@@ -88,12 +88,12 @@ namespace TfsUtil
 
             if (string.IsNullOrEmpty(title))
             {
-                throw new ArgumentException("The value can be neither empty string nor null.", "title");
+                throw new ArgumentException(@"The value can be neither empty string nor null.", "title");
             }
 
             if (string.IsNullOrEmpty(operationDescription))
             {
-                throw new ArgumentException("The value can be neither empty string nor null.", "operationDescription");
+                throw new ArgumentException(@"The value can be neither empty string nor null.", "operationDescription");
             }
 
             if (action == null)

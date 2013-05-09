@@ -116,7 +116,9 @@
     <Compile Include="Controls\MergeSearchControl.xaml.cs">
       <DependentUpon>MergeSearchControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\MergeSearchControlViewModel.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="MainWindowViewModel.cs" />
     <Compile Include="MergeCandidateWrapper.cs" />
     <Compile Include="ProgressResult.cs" />
     <Compile Include="ProgressWindow.xaml.cs">
