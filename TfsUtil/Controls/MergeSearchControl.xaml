@@ -35,7 +35,18 @@
         <Label Content="_Target Branch:" HorizontalAlignment="Left" Margin="12,74,12,0" Name="TargetBranchLabel"
                 VerticalAlignment="Top" />
         <ComboBox Height="23" HorizontalAlignment="Stretch" Margin="12,106,12,0" Name="TargetBranchComboBox"
-                VerticalAlignment="Top" ItemsSource="{Binding TargetBranchesView}" IsSynchronizedWithCurrentItem="True" />
+                VerticalAlignment="Top" ItemsSource="{Binding TargetBranchesView}" IsSynchronizedWithCurrentItem="True"
+                ContextMenuOpening="TargetBranchComboBox_ContextMenuOpening">
+            <ComboBox.ContextMenu>
+                <ContextMenu>
+                    <ContextMenu.Items>
+                        <MenuItem Name="CopyTargetBranch" Header="_Copy" Click="CopyTargetBranch_Click" />
+                        <MenuItem Name="SetAsSourceBranch" Header="Set As _Source Branch"
+                                Click="SetAsSourceBranch_Click" />
+                    </ContextMenu.Items>
+                </ContextMenu>
+            </ComboBox.ContextMenu>
+        </ComboBox>
         <Label Content="_User Name:" HorizontalAlignment="Left" Margin="12,143,12,0" Name="UserNameLabel"
                 VerticalAlignment="Top" />
         <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,172,58,0" Name="UserNameTextBox"

@@ -175,20 +175,17 @@ namespace TfsUtil.Controls
                 return;
             }
 
-            var targetBranchItem = (ControlItem<ItemIdentifier>)this.TargetBranchComboBox.SelectedItem;
-            if (targetBranchItem == null
-                || targetBranchItem.Item == null
-                || string.IsNullOrEmpty(targetBranchItem.Item.Item))
+            var targetBranch = this.ViewModel.TargetBranch;
+            if (string.IsNullOrWhiteSpace(targetBranch))
             {
                 SetMergeCandidatesListViewBackText("The target branch is not selected properly.");
                 return;
             }
 
-            var targetBranch = targetBranchItem.Item.Item;
             var userName = (this.UserNameTextBox.Text ?? string.Empty).Trim();
 
             var mergeDirection = new StringBuilder();
-            mergeDirection.AppendFormat("'{0}' ⇒ '{1}'", sourceBranch, targetBranch);
+            mergeDirection.AppendFormat("'{0}' => '{1}'", sourceBranch, targetBranch);
             if (!string.IsNullOrEmpty(userName))
             {
                 mergeDirection.AppendFormat(" by '{0}'", userName);
@@ -437,6 +434,24 @@ namespace TfsUtil.Controls
         private void CopyWorkItemIdsMenuItem_Click(object sender, RoutedEventArgs e)
         {
             CopySoleSelectedMergeCandidateDataToClipboard(mc => mc.WorkItemIdsAsString);
+        }
+
+        private void CopyTargetBranch_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(this.ViewModel.TargetBranch);
+        }
+
+        private void SetAsSourceBranch_Click(object sender, RoutedEventArgs e)
+        {
+            this.ViewModel.SourceBranch = this.ViewModel.TargetBranch;
+        }
+
+        private void TargetBranchComboBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            var isTargetBranchValid = !string.IsNullOrWhiteSpace(this.ViewModel.TargetBranch);
+
+            this.CopyTargetBranch.IsEnabled = isTargetBranchValid;
+            this.SetAsSourceBranch.IsEnabled = isTargetBranchValid;
         }
 
         #endregion

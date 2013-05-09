@@ -79,6 +79,20 @@ namespace TfsUtil.Controls
             }
         }
 
+        public string TargetBranch
+        {
+            get
+            {
+                var currentTargetBranchItem = (ControlItem<ItemIdentifier>)this.TargetBranchesView.CurrentItem;
+
+                return currentTargetBranchItem == null
+                    || currentTargetBranchItem.Item == null
+                    || string.IsNullOrWhiteSpace(currentTargetBranchItem.Item.Item)
+                    ? string.Empty
+                    : currentTargetBranchItem.Item.Item;
+            }
+        }
+
         #endregion
 
         #region Internal Properties
