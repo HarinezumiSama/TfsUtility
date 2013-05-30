@@ -9,8 +9,6 @@ using TfsUtil.Controls;
 
 namespace TfsUtil
 {
-    //// TODO: [VM] Implement MDI-like (New Merge Search menu item creates a new `MDI` window)
-
     /// <summary>
     ///     Contains interaction logic for MainWindow.xaml.
     /// </summary>
@@ -97,20 +95,6 @@ namespace TfsUtil
 
         private void SelectServer(MenuItem menuItem)
         {
-            if (HasCurrentContent())
-            {
-                var answer = this.ShowMessageBox(
-                    "If you change the current server, the content will be closed. Continue?",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-                if (answer != MessageBoxResult.Yes)
-                {
-                    return;
-                }
-
-                ClearCurrentContent();
-            }
-
             if (menuItem == null)
             {
                 this.ViewModel.TfsServerUri = null;
@@ -141,22 +125,41 @@ namespace TfsUtil
 
         private bool HasCurrentContent()
         {
-            return this.CurrentContent.Content != null;
+            return this.ContentTabs.SelectedItem is TabItem;
         }
 
-        private void SetCurrentContent(object content)
+        private void AddContentTab(Control content)
         {
-            this.CurrentContent.Content = content;
+            var dataContext = new ContentTabViewModel
+            {
+                HeaderText = content.GetType().Name,
+                TfsServerUri = this.ViewModel.TfsServerUri
+            };
+
+            var contentTab = new TabItem
+            {
+                Content = content.EnsureNotNull(),
+                DataContext = dataContext,
+                HeaderTemplate = (DataTemplate)this.Resources["TabItemHeaderTemplate"].EnsureNotNull()
+            };
+
+            this.ContentTabs.Items.Add(contentTab);
+            this.ContentTabs.SelectedItem = contentTab;
         }
 
-        private void ClearCurrentContent()
+        private void ClearCurrentContent(TabItem contentTab)
         {
-            SetCurrentContent(null);
+            if (contentTab == null)
+            {
+                return;
+            }
+
+            this.ContentTabs.Items.Remove(contentTab);
         }
 
         private void DoExecuteMergeSearch()
         {
-            SetCurrentContent(new MergeSearchControl(this.ViewModel.TfsServerUri));
+            AddContentTab(new MergeSearchControl(this.ViewModel.TfsServerUri));
         }
 
         #endregion
@@ -180,7 +183,7 @@ namespace TfsUtil
 
         private void CanExecuteMergeSearch(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = this.ViewModel.TfsServerUri != null && !(this.CurrentContent.Content is MergeSearchControl);
+            e.CanExecute = this.ViewModel.TfsServerUri != null;
         }
 
         private void ServerItem_Click(object sender, RoutedEventArgs e)
@@ -195,7 +198,7 @@ namespace TfsUtil
 
         private void ExecuteCloseActiveContent(object sender, ExecutedRoutedEventArgs e)
         {
-            ClearCurrentContent();
+            ClearCurrentContent(e.Parameter as TabItem);
         }
 
         #endregion
