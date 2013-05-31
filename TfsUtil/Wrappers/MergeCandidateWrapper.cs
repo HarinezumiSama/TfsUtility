@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
-namespace TfsUtil
+namespace TfsUtil.Wrappers
 {
     /// <summary>
     ///     Represents a wrapper for <see cref="MergeCandidate"/> class.

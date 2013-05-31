@@ -6,7 +6,7 @@ using System.Linq;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
-namespace TfsUtil
+namespace TfsUtil.Wrappers
 {
     public sealed class TfsWrapper : IDisposable
     {
@@ -30,18 +30,18 @@ namespace TfsUtil
         ///     Initializes a new instance of the <see cref="TfsWrapper"/> class
         ///     using the specified URL.
         /// </summary>
-        public TfsWrapper(Uri url)
+        public TfsWrapper(TfsServerInfo serverInfo)
         {
             #region Argument Check
 
-            if (url == null)
+            if (serverInfo == null)
             {
-                throw new ArgumentNullException("url");
+                throw new ArgumentNullException("serverInfo");
             }
 
             #endregion
 
-            _teamProjectCollection = new TfsTeamProjectCollection(url);
+            _teamProjectCollection = new TfsTeamProjectCollection(serverInfo.Uri);
             _versionControlServerLazy = new Lazy<VersionControlServer>(GetService<VersionControlServer>);
         }
 

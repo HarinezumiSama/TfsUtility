@@ -119,16 +119,18 @@
       <DependentUpon>MergeSearchControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\MergeSearchControlViewModel.cs" />
+    <Compile Include="Controls\TabContentControl.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="MainWindowViewModel.cs" />
-    <Compile Include="MergeCandidateWrapper.cs" />
+    <Compile Include="Wrappers\TfsServerInfo.cs" />
+    <Compile Include="Wrappers\MergeCandidateWrapper.cs" />
     <Compile Include="ProgressResult.cs" />
     <Compile Include="ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TfsWrapper.cs" />
+    <Compile Include="Wrappers\TfsWrapper.cs" />
     <Compile Include="ControlItem.cs" />
-    <Compile Include="WorkItemWrapper.cs" />
+    <Compile Include="Wrappers\WorkItemWrapper.cs" />
     <Page Include="Controls\MergeSearchControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

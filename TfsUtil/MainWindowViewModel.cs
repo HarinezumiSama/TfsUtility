@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
+using TfsUtil.Wrappers;
 
 namespace TfsUtil
 {
-    internal sealed class MainWindowViewModel
+    public sealed class MainWindowViewModel
     {
         #region Public Properties
 
-        public Uri TfsServerUri
+        public TfsServerInfo SelectedServer
         {
             get;
             set;

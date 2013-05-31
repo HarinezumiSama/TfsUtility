@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.TeamFoundation.Client;
 using TfsUtil.Controls;
+using TfsUtil.Wrappers;
 
 namespace TfsUtil
 {
@@ -71,8 +73,9 @@ namespace TfsUtil
                     Header = tfsCollection.Name,
                     ToolTip = tfsCollection.Uri.AbsoluteUri,
                     IsCheckable = false,  // Should not be checked/unchecked automatically
-                    Tag = tfsCollection
+                    Tag = new TfsServerInfo(tfsCollection)
                 };
+
                 serverItem.Click += this.ServerItem_Click;
 
                 firstItem = firstItem ?? serverItem;
@@ -97,7 +100,7 @@ namespace TfsUtil
         {
             if (menuItem == null)
             {
-                this.ViewModel.TfsServerUri = null;
+                this.ViewModel.SelectedServer = null;
                 return;
             }
 
@@ -112,42 +115,52 @@ namespace TfsUtil
                 oldSelectedServerItem.IsChecked = false;
             }
 
-            var tfsCollection = menuItem.Tag as RegisteredProjectCollection;
-            if (tfsCollection == null)
+            var serverInfo = menuItem.Tag as TfsServerInfo;
+            if (serverInfo == null)
             {
-                this.ViewModel.TfsServerUri = null;
+                this.ViewModel.SelectedServer = null;
                 return;
             }
 
             menuItem.IsChecked = true;
-            this.ViewModel.TfsServerUri = tfsCollection.Uri;
+            this.ViewModel.SelectedServer = serverInfo;
         }
 
-        private bool HasCurrentContent()
+        private bool HasAnyContentTab()
         {
             return this.ContentTabs.SelectedItem is TabItem;
         }
 
-        private void AddContentTab(Control content)
+        private void AddContentTab(TabContentControl tabContentControl)
         {
+            if (this.ViewModel.SelectedServer == null)
+            {
+                throw new InvalidOperationException("The TFS server is not selected.");
+            }
+
+            tabContentControl.EnsureNotNull();
+
             var dataContext = new ContentTabViewModel
             {
-                HeaderText = content.GetType().Name,
-                TfsServerUri = this.ViewModel.TfsServerUri
+                HeaderText = string.Format(
+                    CultureInfo.InvariantCulture,
+                    @"{0} @ {1}",
+                    tabContentControl.Header,
+                    this.ViewModel.SelectedServer.Name),
+                TfsServerUri = this.ViewModel.SelectedServer.Uri
             };
 
             var contentTab = new TabItem
             {
-                Content = content.EnsureNotNull(),
-                DataContext = dataContext,
-                HeaderTemplate = (DataTemplate)this.Resources["TabItemHeaderTemplate"].EnsureNotNull()
+                Content = tabContentControl,
+                DataContext = dataContext
             };
 
             this.ContentTabs.Items.Add(contentTab);
             this.ContentTabs.SelectedItem = contentTab;
         }
 
-        private void ClearCurrentContent(TabItem contentTab)
+        private void RemoveContentTab(TabItem contentTab)
         {
             if (contentTab == null)
             {
@@ -159,7 +172,7 @@ namespace TfsUtil
 
         private void DoExecuteMergeSearch()
         {
-            AddContentTab(new MergeSearchControl(this.ViewModel.TfsServerUri));
+            AddContentTab(new MergeSearchControl(this.ViewModel.SelectedServer));
         }
 
         #endregion
@@ -183,7 +196,7 @@ namespace TfsUtil
 
         private void CanExecuteMergeSearch(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = this.ViewModel.TfsServerUri != null;
+            e.CanExecute = this.ViewModel.SelectedServer != null;
         }
 
         private void ServerItem_Click(object sender, RoutedEventArgs e)
@@ -193,12 +206,13 @@ namespace TfsUtil
 
         private void CanCloseActiveContent(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasCurrentContent();
+            e.CanExecute = HasAnyContentTab();
         }
 
         private void ExecuteCloseActiveContent(object sender, ExecutedRoutedEventArgs e)
         {
-            ClearCurrentContent(e.Parameter as TabItem);
+            var contentTab = e.Parameter as TabItem ?? this.ContentTabs.SelectedItem as TabItem;
+            RemoveContentTab(contentTab);
         }
 
         #endregion

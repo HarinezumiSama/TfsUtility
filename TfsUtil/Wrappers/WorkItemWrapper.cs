@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 
-namespace TfsUtil
+namespace TfsUtil.Wrappers
 {
     /// <summary>
     ///     Represents a wrapper for <see cref="WorkItem"/> class.

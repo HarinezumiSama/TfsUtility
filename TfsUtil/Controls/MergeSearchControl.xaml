@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TfsUtil.Controls.MergeSearchControl"
+﻿<controls:TabContentControl x:Class="TfsUtil.Controls.MergeSearchControl"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,9 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480" Loaded="Control_Loaded"
         FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}"
         FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}" MinWidth="400" MinHeight="300">
-    <UserControl.DataContext>
+    <controls:TabContentControl.DataContext>
         <controls:MergeSearchControlViewModel x:Name="ViewModel" />
-    </UserControl.DataContext>
+    </controls:TabContentControl.DataContext>
     <Grid>
         <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0"
                 PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
@@ -85,4 +85,4 @@
             </ListView.View>
         </ListView>
     </Grid>
-</UserControl>
+</controls:TabContentControl>

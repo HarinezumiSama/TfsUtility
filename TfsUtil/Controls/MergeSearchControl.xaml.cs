@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using TfsUtil.Wrappers;
 
 namespace TfsUtil.Controls
 {
@@ -23,19 +24,19 @@ namespace TfsUtil.Controls
         /// <summary>
         ///     Initializes a new instance of the <see cref="MergeSearchControl"/> class.
         /// </summary>
-        public MergeSearchControl(Uri tfsServerUri)
+        public MergeSearchControl(TfsServerInfo serverInfo)
             : this()
         {
             #region Argument Check
 
-            if (tfsServerUri == null)
+            if (serverInfo == null)
             {
-                throw new ArgumentNullException("tfsServerUri");
+                throw new ArgumentNullException("serverInfo");
             }
 
             #endregion
 
-            this.ViewModel.TfsServerUri = tfsServerUri;
+            this.ViewModel.TfsServer = serverInfo;
         }
 
         /// <summary>
@@ -44,6 +45,19 @@ namespace TfsUtil.Controls
         private MergeSearchControl()
         {
             InitializeComponent();
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        public override string Header
+        {
+            [DebuggerNonUserCode]
+            get
+            {
+                return "Merge Search";
+            }
         }
 
         #endregion
@@ -194,7 +208,7 @@ namespace TfsUtil.Controls
             this.MergeDirectionTextBox.Text = mergeDirection.ToString();
 
             var window = this.GetWindow();
-            var pr = ProgressWindow.Execute(
+            var progressResult = ProgressWindow.Execute(
                 window,
                 window.EnsureNotNull().Title,
                 "Searching for changesets to merge...",
@@ -210,23 +224,23 @@ namespace TfsUtil.Controls
                     }
                 });
 
-            if (pr.Cancelled)
+            if (progressResult.Cancelled)
             {
                 SetMergeCandidatesListViewBackText("The operation is cancelled.");
                 return;
             }
 
-            if (pr.Exception != null)
+            if (progressResult.Exception != null)
             {
                 SetMergeCandidatesListViewBackText(
                     string.Format(
                         "Error occurred: [{0}] {1}",
-                        pr.Exception.GetType().FullName,
-                        pr.Exception.Message));
+                        progressResult.Exception.GetType().FullName,
+                        progressResult.Exception.Message));
                 return;
             }
 
-            var mergeCandidates = (MergeCandidateWrapper[])pr.Result;
+            var mergeCandidates = (MergeCandidateWrapper[])progressResult.Result;
             var filteredCandidates = (IEnumerable<MergeCandidateWrapper>)mergeCandidates;
 
             if (!string.IsNullOrEmpty(userName))

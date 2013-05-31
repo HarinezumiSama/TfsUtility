@@ -8,9 +8,7 @@
     <Window.Resources>
         <BitmapImage x:Key="CloseTabImageSource"
                 UriSource="pack://application:,,,/TfsUtil;component/Resources/CloseTab.png" />
-        <!-- ReSharper disable Xaml.RedundantResource -->
         <DataTemplate x:Key="TabItemHeaderTemplate" DataType="local:ContentTabViewModel">
-            <!-- ReSharper restore Xaml.RedundantResource -->
             <StackPanel Orientation="Horizontal"
                     DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=TabItem},Path=DataContext}"
                     d:DataContext="{d:DesignInstance local:ContentTabViewModel}">
@@ -64,7 +62,7 @@
         </DataTemplate>
     </Window.Resources>
     <Window.DataContext>
-        <local:MainWindowViewModel x:Name="ViewModel" />
+        <local:MainWindowViewModel x:Name="ViewModel" x:FieldModifier="public" />
     </Window.DataContext>
     <Window.CommandBindings>
         <CommandBinding Command="cmd:AppCommands.MergeSearch" CanExecute="CanExecuteMergeSearch"
@@ -77,7 +75,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0" Height="23" HorizontalAlignment="Stretch" Name="mainMenu" VerticalAlignment="Top"
+        <Menu Grid.Row="0" Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top"
                 FontFamily="Verdana" FontSize="11">
             <MenuItem Name="FileMenu" Header="_File">
                 <MenuItem Name="MergeSearchMenuItem" Header="_Merge Search..." Command="cmd:AppCommands.MergeSearch" />
@@ -87,6 +85,11 @@
         </Menu>
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <TabControl Name="ContentTabs" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="HeaderTemplate" Value="{StaticResource TabItemHeaderTemplate}" />
+                    </Style>
+                </TabControl.Resources>
             </TabControl>
         </ScrollViewer>
     </Grid>

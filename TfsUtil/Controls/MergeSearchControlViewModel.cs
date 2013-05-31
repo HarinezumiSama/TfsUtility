@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Data;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using TfsUtil.Wrappers;
 
 namespace TfsUtil.Controls
 {
@@ -40,7 +41,7 @@ namespace TfsUtil.Controls
 
         #region Public Properties
 
-        public Uri TfsServerUri
+        public TfsServerInfo TfsServer
         {
             get;
             set;
@@ -115,7 +116,7 @@ namespace TfsUtil.Controls
 
         public TfsWrapper CreateTfsWrapper()
         {
-            return new TfsWrapper(this.TfsServerUri);
+            return new TfsWrapper(this.TfsServer);
         }
 
         public void RefreshSourceBranches()
