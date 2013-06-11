@@ -120,6 +120,7 @@
     </Compile>
     <Compile Include="Controls\MergeSearchControlViewModel.cs" />
     <Compile Include="Controls\TabContentControl.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="MainWindowViewModel.cs" />
     <Compile Include="Wrappers\TfsServerInfo.cs" />

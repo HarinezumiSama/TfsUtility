@@ -65,7 +65,7 @@
         <local:MainWindowViewModel x:Name="ViewModel" x:FieldModifier="public" />
     </Window.DataContext>
     <Window.CommandBindings>
-        <CommandBinding Command="cmd:AppCommands.MergeSearch" CanExecute="CanExecuteMergeSearch"
+        <CommandBinding Command="cmd:AppCommands.NewMergeSearch" CanExecute="CanExecuteMergeSearch"
                 Executed="ExecuteMergeSearch" />
         <CommandBinding Command="cmd:AppCommands.CloseActiveContent" CanExecute="CanCloseActiveContent"
                 Executed="ExecuteCloseActiveContent" />
@@ -78,7 +78,7 @@
         <Menu Grid.Row="0" Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top"
                 FontFamily="Verdana" FontSize="11">
             <MenuItem Name="FileMenu" Header="_File">
-                <MenuItem Name="MergeSearchMenuItem" Header="_Merge Search..." Command="cmd:AppCommands.MergeSearch" />
+                <MenuItem Name="MergeSearchMenuItem" Header="New _Merge Search..." Command="cmd:AppCommands.NewMergeSearch" />
                 <MenuItem Name="CloseMenuItem" Header="_Close" Command="cmd:AppCommands.CloseActiveContent" />
             </MenuItem>
             <MenuItem Name="ServerMenu" Header="_Server" />

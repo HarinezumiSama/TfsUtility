@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Data;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using TfsUtil.Wrappers;
@@ -13,6 +16,9 @@ namespace TfsUtil.Controls
     {
         #region Fields
 
+        private readonly object _busySyncLock = new object();
+        private readonly TaskScheduler _uiScheduler;
+        private bool _isBusy;
         private string _sourceBranch;
 
         #endregion
@@ -21,6 +27,8 @@ namespace TfsUtil.Controls
 
         public MergeSearchControlViewModel()
         {
+            _uiScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+
             _sourceBranch = string.Empty;
 
             this.SourceBranches = new List<ControlItem<ItemIdentifier>>();
@@ -40,6 +48,18 @@ namespace TfsUtil.Controls
         #endregion
 
         #region Public Properties
+
+        public bool IsBusy
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                lock (_busySyncLock)
+                {
+                    return _isBusy;
+                }
+            }
+        }
 
         public TfsServerInfo TfsServer
         {
@@ -76,7 +96,7 @@ namespace TfsUtil.Controls
                 }
 
                 _sourceBranch = actualValue;
-                RaisePropertyChanged(Helper.GetPropertyName((MergeSearchControlViewModel obj) => obj.SourceBranch));
+                RaisePropertyChanged(obj => obj.SourceBranch);
             }
         }
 
@@ -87,10 +107,10 @@ namespace TfsUtil.Controls
                 var currentTargetBranchItem = (ControlItem<ItemIdentifier>)this.TargetBranchesView.CurrentItem;
 
                 return currentTargetBranchItem == null
-                    || currentTargetBranchItem.Item == null
-                    || string.IsNullOrWhiteSpace(currentTargetBranchItem.Item.Item)
+                    || currentTargetBranchItem.Value == null
+                    || string.IsNullOrWhiteSpace(currentTargetBranchItem.Value.Item)
                     ? string.Empty
-                    : currentTargetBranchItem.Item.Item;
+                    : currentTargetBranchItem.Value.Item;
             }
         }
 
@@ -114,6 +134,26 @@ namespace TfsUtil.Controls
 
         #region Public Methods
 
+        public bool SetIsBusy(bool value)
+        {
+            bool result;
+
+            lock (_busySyncLock)
+            {
+                result = _isBusy;
+                if (value == _isBusy)
+                {
+                    return result;
+                }
+
+                _isBusy = value;
+            }
+
+            RaisePropertyChanged(obj => obj.IsBusy);
+
+            return result;
+        }
+
         public TfsWrapper CreateTfsWrapper()
         {
             return new TfsWrapper(this.TfsServer);
@@ -121,30 +161,15 @@ namespace TfsUtil.Controls
 
         public void RefreshSourceBranches()
         {
-            BranchObject[] branchObjects;
-            using (var tfsWrapper = CreateTfsWrapper())
-            {
-                branchObjects = tfsWrapper.VersionControlServer.QueryRootBranchObjects(RecursionType.Full);
-            }
+            SetIsBusy(true);
 
-            var branchItems = branchObjects
-                .SelectMany(
-                    item => item
-                        .ChildBranches
-                        .Concat(item.RelatedBranches)
-                        .Concat(item.Properties.RootItem.AsCollection()))
-                .Select(item => item.Item)
-                .Distinct()
-                .OrderBy(item => item)
-                .Select(item => ControlItem.Create(new ItemIdentifier(item), item))
-                .ToArray();
+            var task = Task<ControlItem<ItemIdentifier>[]>.Factory.StartNew(this.GetSourceBranches);
 
-            this.SourceBranches.ReplaceContents(branchItems);
-
-            this.SourceBranchesView.Refresh();
-            this.SourceBranchesView.MoveCurrentToFirst();
-
-            RefreshTargetBranches();
+            task.ContinueWith(
+                this.OnRefreshSourceBranchesFinished,
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnRanToCompletion,
+                _uiScheduler);
         }
 
         public void RefreshTargetBranches()
@@ -180,12 +205,17 @@ namespace TfsUtil.Controls
 
         #region Private Methods
 
-        private void RaisePropertyChanged(string propertyName)
+        private void RaisePropertyChanged<TProperty>(
+            Expression<Func<MergeSearchControlViewModel, TProperty>> propertyGetterExpression)
         {
-            if (string.IsNullOrEmpty(propertyName))
+            #region Argument Check
+
+            if (propertyGetterExpression == null)
             {
-                return;
+                throw new ArgumentNullException("propertyGetterExpression");
             }
+
+            #endregion
 
             var propertyChanged = this.PropertyChanged;
             if (propertyChanged == null)
@@ -193,7 +223,44 @@ namespace TfsUtil.Controls
                 return;
             }
 
+            var propertyName = Helper.GetPropertyName(propertyGetterExpression);
             propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private ControlItem<ItemIdentifier>[] GetSourceBranches()
+        {
+            BranchObject[] branchObjects;
+            using (var tfsWrapper = CreateTfsWrapper())
+            {
+                branchObjects = tfsWrapper.VersionControlServer.QueryRootBranchObjects(RecursionType.Full);
+            }
+
+            var result = branchObjects
+                .SelectMany(
+                    item => item
+                        .ChildBranches
+                        .Concat(item.RelatedBranches)
+                        .Concat(item.Properties.RootItem.AsCollection()))
+                .Select(item => item.Item)
+                .Distinct()
+                .OrderBy(item => item)
+                .Select(item => ControlItem.Create(new ItemIdentifier(item), item))
+                .ToArray();
+
+            return result;
+        }
+
+        private void OnRefreshSourceBranchesFinished(Task<ControlItem<ItemIdentifier>[]> task)
+        {
+            var sourceBranches = task.EnsureNotNull().Result ?? Enumerable.Empty<ControlItem<ItemIdentifier>>();
+            this.SourceBranches.ReplaceContents(sourceBranches);
+
+            this.SourceBranchesView.Refresh();
+            this.SourceBranchesView.MoveCurrentToFirst();
+
+            SetIsBusy(false);
+
+            RefreshTargetBranches();
         }
 
         private void SourceBranchesView_CurrentChanged(object sender, EventArgs e)

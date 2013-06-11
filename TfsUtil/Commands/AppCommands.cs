@@ -9,14 +9,14 @@ namespace TfsUtil.Commands
     {
         #region Fields
 
-        public static readonly RoutedUICommand MergeSearch = new RoutedUICommand(
-            "Merge search",
-            "MergeSearch",
+        public static readonly RoutedUICommand NewMergeSearch = new RoutedUICommand(
+            "New Merge search",
+            "NewMergeSearch",
             typeof(AppCommands),
             new InputGestureCollection { new KeyGesture(Key.M, ModifierKeys.Control) });
 
         public static readonly RoutedUICommand CloseActiveContent = new RoutedUICommand(
-            "Close Active Content",
+            "Close",
             "CloseActiveContent",
             typeof(AppCommands),
             new InputGestureCollection { new KeyGesture(Key.W, ModifierKeys.Control) });

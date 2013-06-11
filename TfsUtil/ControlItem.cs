@@ -15,7 +15,7 @@ namespace TfsUtil
         /// </summary>
         public ControlItem(T item, string text)
         {
-            this.Item = item;
+            this.Value = item;
             this.Text = text ?? string.Empty;
         }
 
@@ -33,7 +33,7 @@ namespace TfsUtil
 
         #region Public Properties
 
-        public T Item
+        public T Value
         {
             get;
             private set;
@@ -56,7 +56,7 @@ namespace TfsUtil
 
         public override int GetHashCode()
         {
-            return ReferenceEquals(this.Item, null) ? 0 : this.Item.GetHashCode();
+            return ReferenceEquals(this.Value, null) ? 0 : this.Value.GetHashCode();
         }
 
         public override string ToString()
@@ -80,7 +80,7 @@ namespace TfsUtil
                 return true;
             }
 
-            return EqualityComparer<T>.Default.Equals(this.Item, other.Item);
+            return EqualityComparer<T>.Default.Equals(this.Value, other.Value);
         }
 
         #endregion

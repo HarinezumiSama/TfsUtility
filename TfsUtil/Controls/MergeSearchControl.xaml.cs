@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -65,6 +66,25 @@ namespace TfsUtil.Controls
         #region Private Methods
 
         #region Regular
+
+        private static bool SelectPopupItem(ComboBox comboBox, ListBoxItem lbi)
+        {
+            if (lbi == null)
+            {
+                return false;
+            }
+
+            var path = lbi.Tag as string;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            comboBox.Text = path;
+            comboBox.MoveCaretToEnd();
+
+            return true;
+        }
 
         private void FillCurrentUserName()
         {
@@ -154,25 +174,6 @@ namespace TfsUtil.Controls
                 lbi.PreviewMouseLeftButtonDown += this.SourceBranchPopupListBox_PreviewMouseLeftButtonDown;
                 this.SourceBranchPopupListBox.Items.Add(lbi);
             }
-        }
-
-        private bool SelectPopupItem(ComboBox comboBox, ListBoxItem lbi)
-        {
-            if (lbi == null)
-            {
-                return false;
-            }
-
-            var path = lbi.Tag as string;
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return false;
-            }
-
-            comboBox.Text = path;
-            comboBox.MoveCaretToEnd();
-
-            return true;
         }
 
         private void SearchMergeCandidates()
@@ -274,7 +275,7 @@ namespace TfsUtil.Controls
                 return null;
             }
 
-            return ((ControlItem<MergeCandidateWrapper>)this.MergeCandidatesListView.SelectedItems[0]).Item;
+            return ((ControlItem<MergeCandidateWrapper>)this.MergeCandidatesListView.SelectedItems[0]).Value;
         }
 
         private void CopySoleSelectedMergeCandidateDataToClipboard(Func<MergeCandidateWrapper, string> selector)
@@ -304,6 +305,8 @@ namespace TfsUtil.Controls
 
         private void Control_Loaded(object sender, RoutedEventArgs e)
         {
+            //// TODO [vmcl] Figure out why it's called multiple times (even when switching between tabs)
+
             Initialize();
         }
 

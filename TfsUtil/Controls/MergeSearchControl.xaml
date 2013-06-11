@@ -3,13 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:controls="clr-namespace:TfsUtil.Controls"
-        mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480" Loaded="Control_Loaded"
-        FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}"
+        xmlns:converters="clr-namespace:TfsUtil.Converters" mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
+        Loaded="Control_Loaded" FontFamily="{StaticResource DefaultFontFamily}"
+        FontSize="{StaticResource DefaultFontSize}"
         FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}" MinWidth="400" MinHeight="300">
     <controls:TabContentControl.DataContext>
         <controls:MergeSearchControlViewModel x:Name="ViewModel" />
     </controls:TabContentControl.DataContext>
+    <controls:TabContentControl.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="ProgressPanelVisibilityConverter" FalseVisibility="Collapsed" />
+    </controls:TabContentControl.Resources>
     <Grid>
+        <Grid Panel.ZIndex="10000" Name="ProgressPanel" HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" Opacity="0.4"
+                Visibility="{Binding IsBusy, Converter={StaticResource ProgressPanelVisibilityConverter}}"
+                Background="Silver">
+            <ProgressBar Height="32" Width="250" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Margin="5,0,5,0" IsIndeterminate="True" IsTabStop="False" />
+        </Grid>
+
         <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0"
                 PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
             <Label Content="_Source Branch:" HorizontalAlignment="Left" Margin="0,0,0,0" Name="SourceBranchLabel"
