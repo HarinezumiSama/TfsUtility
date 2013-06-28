@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:controls="clr-namespace:TfsUtil.Controls"
-        xmlns:converters="clr-namespace:TfsUtil.Converters" mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
-        Loaded="Control_Loaded" FontFamily="{StaticResource DefaultFontFamily}"
+        xmlns:converters="clr-namespace:TfsUtil.Converters" xmlns:local="clr-namespace:TfsUtil" mc:Ignorable="d"
+        d:DesignWidth="640" d:DesignHeight="480" Loaded="Control_Loaded" FontFamily="{StaticResource DefaultFontFamily}"
         FontSize="{StaticResource DefaultFontSize}"
         FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}" MinWidth="400" MinHeight="300">
     <controls:TabContentControl.DataContext>
@@ -12,11 +12,11 @@
     </controls:TabContentControl.DataContext>
     <controls:TabContentControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="ProgressPanelVisibilityConverter" FalseVisibility="Collapsed" />
+        <converters:DateTimeConverter x:Key="DateTimeConverter" />
     </controls:TabContentControl.Resources>
     <Grid>
-        <Grid Panel.ZIndex="10000" Name="ProgressPanel" HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" Opacity="0.4"
-                Visibility="{Binding IsBusy, Converter={StaticResource ProgressPanelVisibilityConverter}}"
+        <Grid Panel.ZIndex="10000" Name="ProgressPanel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Opacity="0.4" Visibility="{Binding IsBusy, Converter={StaticResource ProgressPanelVisibilityConverter}}"
                 Background="Silver">
             <ProgressBar Height="32" Width="250" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Margin="5,0,5,0" IsIndeterminate="True" IsTabStop="False" />
@@ -34,7 +34,7 @@
                     DropDownClosed="SourceBranchComboBox_DropDownClosed" GotFocus="SourceBranchComboBox_GotFocus"
                     LostFocus="SourceBranchComboBox_LostFocus" IsTextSearchEnabled="False" />
         </StackPanel>
-        <Popup Name="SourceBranchPopup" IsOpen="false" StaysOpen="True"
+        <Popup Name="SourceBranchPopup" IsOpen="False" StaysOpen="True"
                 PlacementTarget="{Binding ElementName=SourceBranchComboBox}" Placement="Bottom" MaxHeight="200">
             <Border BorderThickness="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                 <ListBox Name="SourceBranchPopupListBox" Focusable="False" KeyboardNavigation.IsTabStop="False"
@@ -75,7 +75,8 @@
         <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,238,12,0" Name="MergeDirectionTextBox"
                 VerticalAlignment="Top" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="#FFEEEEEE" />
         <ListView Name="MergeCandidatesListView" Margin="12,267,12,12" HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening">
+                VerticalAlignment="Stretch" ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening"
+                d:DataContext="{d:DesignInstance Type=controls:MergeCandidateWrapperDummyItem,CreateList=True}">
             <ListView.ContextMenu>
                 <ContextMenu FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}">
                     <MenuItem Name="CopyChangesetNumberMenuItem" Header="Copy Change_set #"
@@ -87,12 +88,15 @@
             </ListView.ContextMenu>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Item.CreationDate}" />
-                    <GridViewColumn Header="Changeset" DisplayMemberBinding="{Binding Item.ChangesetId}" />
-                    <GridViewColumn Header="Owner" DisplayMemberBinding="{Binding Item.Owner}" />
-                    <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Item.Comment}" />
-                    <GridViewColumn Header="WorkItem IDs" DisplayMemberBinding="{Binding Item.WorkItemIdsAsString}" />
-                    <!--<GridViewColumn Header="Info" DisplayMemberBinding="{Binding Item.AsString}" />-->
+                    <GridViewColumn Header="Date"
+                            DisplayMemberBinding="{Binding Value.CreationDate, Converter={StaticResource DateTimeConverter}}"
+                            Width="Auto" />
+                    <GridViewColumn Header="Changeset" DisplayMemberBinding="{Binding Value.ChangesetId}" Width="Auto" />
+                    <GridViewColumn Header="Owner" DisplayMemberBinding="{Binding Value.Owner}" Width="Auto" />
+                    <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Value.Comment}" />
+                    <GridViewColumn Header="WorkItem IDs" DisplayMemberBinding="{Binding Value.WorkItemIdsAsString}"
+                            Width="Auto" />
+                    <!--<GridViewColumn Header="Info" DisplayMemberBinding="{Binding Value.AsString}" />-->
                 </GridView>
             </ListView.View>
         </ListView>

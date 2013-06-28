@@ -115,12 +115,14 @@
     </ApplicationDefinition>
     <Compile Include="ContentTabViewModel.cs" />
     <Compile Include="ControlItem.Helper.cs" />
+    <Compile Include="Controls\MergeCandidateWrapperDummyItem.cs" />
     <Compile Include="Controls\MergeSearchControl.xaml.cs">
       <DependentUpon>MergeSearchControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\MergeSearchControlViewModel.cs" />
     <Compile Include="Controls\TabContentControl.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\DateTimeConverter.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="MainWindowViewModel.cs" />
     <Compile Include="Wrappers\TfsServerInfo.cs" />
