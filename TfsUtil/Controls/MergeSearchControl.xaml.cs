@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -9,7 +10,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Microsoft.TeamFoundation.VersionControl.Client;
 using TfsUtil.Wrappers;
 
 //// TODO [vmaklai] Use MVVM everywhere
@@ -21,6 +21,13 @@ namespace TfsUtil.Controls
     /// </summary>
     public partial class MergeSearchControl
     {
+        #region Constants and Fields
+
+        private readonly object _syncLock = new object();
+        private bool _isInitialized;
+
+        #endregion
+
         #region Constructors
 
         /// <summary>
@@ -100,7 +107,20 @@ namespace TfsUtil.Controls
 
         private void Initialize()
         {
-            this.ViewModel.RefreshSourceBranches();
+            lock (_syncLock)
+            {
+                if (_isInitialized)
+                {
+                    return;
+                }
+
+                if (!DesignerProperties.GetIsInDesignMode(this))
+                {
+                    this.ViewModel.RefreshSourceBranches();
+                }
+
+                _isInitialized = true;
+            }
         }
 
         private void SetMergeCandidatesListViewBackText(string text)
@@ -179,8 +199,11 @@ namespace TfsUtil.Controls
 
         private void SearchMergeCandidates()
         {
-            this.MergeCandidatesListView.ItemsSource = null;
-            this.MergeCandidatesListView.Items.Clear();
+            if (this.ViewModel.IsBusy)
+            {
+                return;
+            }
+
             this.MergeDirectionTextBox.Clear();
             SetMergeCandidatesListViewBackText(null);
 
@@ -209,74 +232,7 @@ namespace TfsUtil.Controls
 
             this.MergeDirectionTextBox.Text = mergeDirection.ToString();
 
-            var window = this.GetWindow();
-            var progressResult = ProgressWindow.Execute(
-                window,
-                window.EnsureNotNull().Title,
-                "Searching for changesets to merge...",
-                pw =>
-                {
-                    using (var tfsWrapper = this.ViewModel.CreateTfsWrapper())
-                    {
-                        return tfsWrapper
-                            .VersionControlServer
-                            .GetMergeCandidates(sourceBranch, targetBranch, RecursionType.Full)
-                            .Select(item => new MergeCandidateWrapper(item))
-                            .ToArray();
-                    }
-                });
-
-            if (progressResult.Cancelled)
-            {
-                SetMergeCandidatesListViewBackText("The operation is cancelled.");
-                return;
-            }
-
-            if (progressResult.Exception != null)
-            {
-                SetMergeCandidatesListViewBackText(
-                    string.Format(
-                        "Error occurred: [{0}] {1}",
-                        progressResult.Exception.GetType().FullName,
-                        progressResult.Exception.Message));
-                return;
-            }
-
-            var mergeCandidates = (MergeCandidateWrapper[])progressResult.Result;
-            var filteredCandidates = (IEnumerable<MergeCandidateWrapper>)mergeCandidates;
-
-            if (!string.IsNullOrEmpty(userName))
-            {
-                filteredCandidates = filteredCandidates
-                    .Where(item => string.Equals(item.Owner, userName, StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
-            }
-
-            if (!filteredCandidates.Any())
-            {
-                SetMergeCandidatesListViewBackText("Nothing is found matching the criteria.");
-                return;
-            }
-
-            filteredCandidates = filteredCandidates
-                .OrderBy(item => item.CreationDate)
-                .ThenBy(item => item.ChangesetId);
-
-            foreach (var candidate in filteredCandidates)
-            {
-                var item = ControlItem.Create(candidate, candidate.ToString());
-                this.MergeCandidatesListView.Items.Add(item);
-            }
-        }
-
-        private MergeCandidateWrapper GetSoleSelectedMergeCandidate()
-        {
-            if (this.MergeCandidatesListView.SelectedItems.Count != 1)
-            {
-                return null;
-            }
-
-            return ((ControlItem<MergeCandidateWrapper>)this.MergeCandidatesListView.SelectedItems[0]).Value;
+            this.ViewModel.SearchMergeCandidates(sourceBranch, targetBranch, userName);
         }
 
         private void CopySoleSelectedMergeCandidateDataToClipboard(Func<MergeCandidateWrapper, string> selector)
@@ -290,7 +246,7 @@ namespace TfsUtil.Controls
 
             #endregion
 
-            var mergeCandidate = GetSoleSelectedMergeCandidate();
+            var mergeCandidate = this.ViewModel.GetSoleSelectedMergeCandidate();
             if (mergeCandidate == null)
             {
                 return;
@@ -306,8 +262,6 @@ namespace TfsUtil.Controls
 
         private void Control_Loaded(object sender, RoutedEventArgs e)
         {
-            //// TODO [vmcl] Figure out why it's called multiple times (even when switching between tabs)
-
             Initialize();
         }
 
@@ -427,15 +381,13 @@ namespace TfsUtil.Controls
                 return;
             }
 
-            var isSoleItemSelected = this.MergeCandidatesListView.SelectedItems.Count == 1;
-
-            var mergeCandidate = new Lazy<MergeCandidateWrapper>(GetSoleSelectedMergeCandidate);
+            var mergeCandidate = this.ViewModel.GetSoleSelectedMergeCandidate();
+            var isSoleItemSelected = mergeCandidate != null;
 
             this.CopyChangesetNumberMenuItem.IsEnabled = isSoleItemSelected;
             this.CopyCommentMenuItem.IsEnabled = isSoleItemSelected;
             this.CopyWorkItemIdsMenuItem.IsEnabled = isSoleItemSelected
-                && mergeCandidate.Value != null
-                && !string.IsNullOrEmpty(mergeCandidate.Value.WorkItemIdsAsString);
+                && !string.IsNullOrEmpty(mergeCandidate.WorkItemIdsAsString);
         }
 
         private void CopyChangesetNumberMenuItem_Click(object sender, RoutedEventArgs e)

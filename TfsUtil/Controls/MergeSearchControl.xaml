@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:controls="clr-namespace:TfsUtil.Controls"
-        xmlns:converters="clr-namespace:TfsUtil.Converters" xmlns:local="clr-namespace:TfsUtil" mc:Ignorable="d"
-        d:DesignWidth="640" d:DesignHeight="480" Loaded="Control_Loaded" FontFamily="{StaticResource DefaultFontFamily}"
+        xmlns:converters="clr-namespace:TfsUtil.Converters" mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
+        Loaded="Control_Loaded" FontFamily="{StaticResource DefaultFontFamily}"
         FontSize="{StaticResource DefaultFontSize}"
         FocusManager.FocusedElement="{Binding ElementName=SourceBranchComboBox}" MinWidth="400" MinHeight="300">
     <controls:TabContentControl.DataContext>
@@ -13,27 +13,41 @@
     <controls:TabContentControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="ProgressPanelVisibilityConverter" FalseVisibility="Collapsed" />
         <converters:DateTimeConverter x:Key="DateTimeConverter" />
+        <Thickness Left="2" Top="5" Right="2" Bottom="1" x:Key="DefaultMargin" />
     </controls:TabContentControl.Resources>
     <Grid>
-        <Grid Panel.ZIndex="10000" Name="ProgressPanel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                Opacity="0.4" Visibility="{Binding IsBusy, Converter={StaticResource ProgressPanelVisibilityConverter}}"
+        <!--Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=TabItem},Path=ActualHeight,Mode=OneWay}"-->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.RowSpan="7" Panel.ZIndex="10000" Name="ProgressPanel" HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" Opacity="0.4"
+                Visibility="{Binding IsBusy, Converter={StaticResource ProgressPanelVisibilityConverter}}"
                 Background="Silver">
             <ProgressBar Height="32" Width="250" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Margin="5,0,5,0" IsIndeterminate="True" IsTabStop="False" />
         </Grid>
 
-        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,12,12,0"
-                PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
-            <Label Content="_Source Branch:" HorizontalAlignment="Left" Margin="0,0,0,0" Name="SourceBranchLabel"
-                    VerticalAlignment="Top" />
-            <ComboBox Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,0,0,0"
-                    Name="SourceBranchComboBox" ItemsSource="{Binding SourceBranchesView}"
-                    IsSynchronizedWithCurrentItem="True" IsEditable="True"
+        <StackPanel Grid.Row="0" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                Margin="{StaticResource DefaultMargin}" PreviewKeyDown="SourceBranchStackPanel_PreviewKeyDown">
+            <Label Content="_Source Branch:" HorizontalAlignment="Left" Name="SourceBranchLabel"
+                    VerticalAlignment="Top" Margin="{StaticResource DefaultMargin}" />
+            <ComboBox Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Top" Name="SourceBranchComboBox"
+                    ItemsSource="{Binding SourceBranchesView}" IsSynchronizedWithCurrentItem="True" IsEditable="True"
                     TextBoxBase.TextChanged="SourceBranchComboBox_TextChanged"
                     Text="{Binding SourceBranch, Mode=TwoWay}" DropDownOpened="SourceBranchComboBox_DropDownOpened"
                     DropDownClosed="SourceBranchComboBox_DropDownClosed" GotFocus="SourceBranchComboBox_GotFocus"
-                    LostFocus="SourceBranchComboBox_LostFocus" IsTextSearchEnabled="False" />
+                    LostFocus="SourceBranchComboBox_LostFocus" IsTextSearchEnabled="False"
+                    Margin="{StaticResource DefaultMargin}" />
         </StackPanel>
+
         <Popup Name="SourceBranchPopup" IsOpen="False" StaysOpen="True"
                 PlacementTarget="{Binding ElementName=SourceBranchComboBox}" Placement="Bottom" MaxHeight="200">
             <Border BorderThickness="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
@@ -44,41 +58,74 @@
                 </ListBox>
             </Border>
         </Popup>
-        <Label Content="_Target Branch:" HorizontalAlignment="Left" Margin="12,74,12,0" Name="TargetBranchLabel"
-                VerticalAlignment="Top" />
-        <ComboBox Height="23" HorizontalAlignment="Stretch" Margin="12,106,12,0" Name="TargetBranchComboBox"
-                VerticalAlignment="Top" ItemsSource="{Binding TargetBranchesView}" IsSynchronizedWithCurrentItem="True"
-                ContextMenuOpening="TargetBranchComboBox_ContextMenuOpening">
-            <ComboBox.ContextMenu>
-                <ContextMenu>
-                    <ContextMenu.Items>
-                        <MenuItem Name="CopyTargetBranch" Header="_Copy" Click="CopyTargetBranch_Click" />
-                        <MenuItem Name="SetAsSourceBranch" Header="Set As _Source Branch"
-                                Click="SetAsSourceBranch_Click" />
-                    </ContextMenu.Items>
-                </ContextMenu>
-            </ComboBox.ContextMenu>
-        </ComboBox>
-        <Label Content="_User Name:" HorizontalAlignment="Left" Margin="12,143,12,0" Name="UserNameLabel"
-                VerticalAlignment="Top" />
-        <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,172,58,0" Name="UserNameTextBox"
-                VerticalAlignment="Top" />
-        <Button Content="*" Height="23" HorizontalAlignment="Right" Margin="0,172,35,0" Name="FillCurrentUserNameButton"
-                VerticalAlignment="Top" Width="23" Click="FillCurrentUserNameButton_Click"
-                ToolTip="Fill with current user name" />
-        <Button Content="X" Height="23" HorizontalAlignment="Right" Margin="0,172,12,0" Name="ClearUserNameButton"
-                ToolTip="Clear user name" VerticalAlignment="Top" Width="23" Click="ClearUserNameButton_Click" />
-        <Button Content="_Search" Height="23" HorizontalAlignment="Left" Margin="12,201,0,0" Name="SearchButton"
-                VerticalAlignment="Top" Width="75" Click="SearchButton_Click" />
-        <Separator Height="5" HorizontalAlignment="Stretch" Margin="12,230,12,0" Name="ResultSeparator"
-                VerticalAlignment="Top" />
-        <TextBox Height="23" HorizontalAlignment="Stretch" Margin="12,238,12,0" Name="MergeDirectionTextBox"
-                VerticalAlignment="Top" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="#FFEEEEEE" />
-        <ListView Name="MergeCandidatesListView" Margin="12,267,12,12" HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening"
-                d:DataContext="{d:DesignInstance Type=controls:MergeCandidateWrapperDummyItem,CreateList=True}">
+
+        <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                Margin="{StaticResource DefaultMargin}">
+            <Label Content="_Target Branch:" HorizontalAlignment="Left" Name="TargetBranchLabel"
+                    VerticalAlignment="Top" Margin="{StaticResource DefaultMargin}" />
+            <ComboBox Height="23" HorizontalAlignment="Stretch" Name="TargetBranchComboBox" VerticalAlignment="Top"
+                    ItemsSource="{Binding TargetBranchesView}" IsSynchronizedWithCurrentItem="True"
+                    Margin="{StaticResource DefaultMargin}"
+                    ContextMenuOpening="TargetBranchComboBox_ContextMenuOpening">
+                <ComboBox.ContextMenu>
+                    <ContextMenu>
+                        <ContextMenu.Items>
+                            <MenuItem Name="CopyTargetBranch" Header="_Copy" Click="CopyTargetBranch_Click" />
+                            <MenuItem Name="SetAsSourceBranch" Header="Set As _Source Branch"
+                                    Click="SetAsSourceBranch_Click" />
+                        </ContextMenu.Items>
+                    </ContextMenu>
+                </ComboBox.ContextMenu>
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                Margin="{StaticResource DefaultMargin}">
+            <Label Content="_User Name:" HorizontalAlignment="Left" Name="UserNameLabel" VerticalAlignment="Top"
+                    Margin="{StaticResource DefaultMargin}" />
+            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Height="23" HorizontalAlignment="Stretch" Name="UserNameTextBox"
+                        VerticalAlignment="Top" Margin="{StaticResource DefaultMargin}" />
+                <Button Grid.Column="1" Content="*" Height="23" HorizontalAlignment="Right"
+                        Name="FillCurrentUserNameButton" VerticalAlignment="Top" Width="23"
+                        Margin="{StaticResource DefaultMargin}" Click="FillCurrentUserNameButton_Click"
+                        ToolTip="Fill with current user name" />
+                <Button Grid.Column="2" Content="X" Height="23" HorizontalAlignment="Right" Name="ClearUserNameButton"
+                        ToolTip="Clear user name" VerticalAlignment="Top" Width="23"
+                        Margin="{StaticResource DefaultMargin}" Click="ClearUserNameButton_Click" />
+            </Grid>
+        </StackPanel>
+
+        <Button Grid.Row="3" Content="_Search" Height="23" HorizontalAlignment="Left" Name="SearchButton"
+                VerticalAlignment="Top" Width="75" Click="SearchButton_Click" Margin="{StaticResource DefaultMargin}" />
+
+        <Separator Grid.Row="4" Height="5" HorizontalAlignment="Stretch" Name="ResultSeparator"
+                VerticalAlignment="Top" Margin="{StaticResource DefaultMargin}" />
+
+        <TextBox Grid.Row="5" Height="23" HorizontalAlignment="Stretch" Name="MergeDirectionTextBox"
+                VerticalAlignment="Top" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="#FFEEEEEE"
+                Margin="{StaticResource DefaultMargin}" />
+
+        <ListView Grid.Row="6" Name="MergeCandidatesListView" HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" ItemsSource="{Binding MergeCandidatesView}"
+                IsSynchronizedWithCurrentItem="True" SelectionMode="Extended" Margin="{StaticResource DefaultMargin}"
+                ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ContextMenuOpening="MergeCandidatesListView_ContextMenuOpening">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}" />
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.ContextMenu>
-                <ContextMenu FontFamily="{StaticResource DefaultFontFamily}" FontSize="{StaticResource DefaultFontSize}">
+                <ContextMenu FontFamily="{StaticResource DefaultFontFamily}"
+                        FontSize="{StaticResource DefaultFontSize}">
                     <MenuItem Name="CopyChangesetNumberMenuItem" Header="Copy Change_set #"
                             Click="CopyChangesetNumberMenuItem_Click" />
                     <MenuItem Name="CopyCommentMenuItem" Header="Copy Co_mment" Click="CopyCommentMenuItem_Click" />
@@ -89,14 +136,14 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Date"
-                            DisplayMemberBinding="{Binding Value.CreationDate, Converter={StaticResource DateTimeConverter}}"
+                            DisplayMemberBinding="{Binding CreationDate, Converter={StaticResource DateTimeConverter}}"
                             Width="Auto" />
-                    <GridViewColumn Header="Changeset" DisplayMemberBinding="{Binding Value.ChangesetId}" Width="Auto" />
-                    <GridViewColumn Header="Owner" DisplayMemberBinding="{Binding Value.Owner}" Width="Auto" />
-                    <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Value.Comment}" />
-                    <GridViewColumn Header="WorkItem IDs" DisplayMemberBinding="{Binding Value.WorkItemIdsAsString}"
+                    <GridViewColumn Header="Changeset" DisplayMemberBinding="{Binding ChangesetId}" Width="Auto" />
+                    <GridViewColumn Header="Owner" DisplayMemberBinding="{Binding Owner}" Width="Auto" />
+                    <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Comment}" />
+                    <GridViewColumn Header="WorkItem IDs" DisplayMemberBinding="{Binding WorkItemIdsAsString}"
                             Width="Auto" />
-                    <!--<GridViewColumn Header="Info" DisplayMemberBinding="{Binding Value.AsString}" />-->
+                    <!--<GridViewColumn Header="Info" DisplayMemberBinding="{Binding AsString}" />-->
                 </GridView>
             </ListView.View>
         </ListView>

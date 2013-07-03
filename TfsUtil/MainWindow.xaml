@@ -4,7 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" mc:Ignorable="d"
         xmlns:cmd="clr-namespace:TfsUtil.Commands" xmlns:local="clr-namespace:TfsUtil" Title="MainWindow" Height="350"
         Width="525" WindowStartupLocation="CenterScreen" FontFamily="{StaticResource DefaultFontFamily}"
-        FontSize="{StaticResource DefaultFontSize}" MinWidth="450" MinHeight="450">
+        FontSize="{StaticResource DefaultFontSize}" MinWidth="450" MinHeight="450"
+        SizeToContent="Manual">
     <Window.Resources>
         <BitmapImage x:Key="CloseTabImageSource"
                 UriSource="pack://application:,,,/TfsUtil;component/Resources/CloseTab.png" />

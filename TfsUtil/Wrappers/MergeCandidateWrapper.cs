@@ -11,7 +11,7 @@ namespace TfsUtil.Wrappers
     /// </summary>
     public sealed class MergeCandidateWrapper
     {
-        #region Constructors and Destructors
+        #region Constructors
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MergeCandidateWrapper"/> class.
@@ -90,6 +90,12 @@ namespace TfsUtil.Wrappers
         {
             get;
             private set;
+        }
+
+        public bool IsSelected
+        {
+            get;
+            set;
         }
 
         #endregion
