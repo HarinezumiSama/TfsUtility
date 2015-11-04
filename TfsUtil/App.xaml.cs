@@ -70,18 +70,6 @@ namespace TfsUtil
 
         #endregion
 
-        #region Public Methods
-
-        /// <summary>
-        ///     Temporary workaround till multithreaded execution is implemented.
-        /// </summary>
-        public static void DoEvents()
-        {
-            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
-        }
-
-        #endregion
-
         #region Private Methods
 
         private static void KillThisProcess()

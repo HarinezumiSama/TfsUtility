@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -12,7 +13,7 @@ using TfsUtil.Wrappers;
 namespace TfsUtil
 {
     /// <summary>
-    ///     Contains interaction logic for MainWindow.xaml.
+    ///     Contains interaction logic for <c>MainWindow.xaml</c>.
     /// </summary>
     public partial class MainWindow
     {
@@ -22,8 +23,12 @@ namespace TfsUtil
         {
             InitializeComponent();
 
-            this.Title = App.Current.ProductName;
+            if (DesignerProperties.GetIsInDesignMode(this))
+            {
+                return;
+            }
 
+            this.Title = App.Current.ProductName;
             this.RefreshTfsServers();
         }
 
